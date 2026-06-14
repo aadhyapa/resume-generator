@@ -1,0 +1,16 @@
+{
+  "categories": {
+    "hard_skills_and_technologies": [
+      { "keyword": "String", "frequency": "Integer" },
+      { "keyword": "String", "frequency": "Integer" }
+    ],
+    "soft_skills_and_methodologies": [
+      { "keyword": "String", "frequency": "Integer" },
+      { "keyword": "String", "frequency": "Integer" }
+    ],
+    "certifications_and_domain_expertise": [
+      { "keyword": "String", "frequency": "Integer" },
+      { "keyword": "String", "frequency": "Integer" }
+    ]
+  }
+}
