@@ -4,13 +4,6 @@ from dotenv import load_dotenv
 load_dotenv()
 client = genai.Client()
 
-result = client.models.embed_content(
-        model="gemini-embedding-001",
-        contents="10x engineer is the best software engineer in the world."
-)
-
-print(result.embeddings)
-
 def generate_embedding(text: str, task_type: str) -> list:
     """
     Generate embeddings for a given text using the Gemini API.
