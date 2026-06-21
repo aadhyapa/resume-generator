@@ -29,4 +29,4 @@ def selector(ranked_bullets, total_limit, per_experience_limit):
         buckets[exp_id].append(bullet)
         total_count += 1
 
-    return dict(buckets)
+    return buckets
