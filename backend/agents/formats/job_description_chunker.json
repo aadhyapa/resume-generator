@@ -1,0 +1,6 @@
+{
+    "requirement": ["String"],
+    "responsibility": ["String"],
+    "bonus": ["String"],
+    "soft-skills": ["String"]
+}
