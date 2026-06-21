@@ -15,3 +15,8 @@ def generate_embedding(text: str) -> list:
         contents=text
     )
     return result.embeddings
+
+def embed(chunks):
+    for chunk in chunks:
+        chunk['embedding'] = generate_embedding(chunk['text'])
+    return chunks
