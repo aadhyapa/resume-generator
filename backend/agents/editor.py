@@ -1,0 +1,116 @@
+import os
+import json
+from google import genai
+from dotenv import load_dotenv
+
+# Find directory paths
+current_dir = os.path.dirname(os.path.abspath(__file__))
+backend_dir = os.path.dirname(current_dir)
+dotenv_path = os.path.join(backend_dir, ".env")
+load_dotenv(dotenv_path)
+
+# Initialize Gemini Client
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
+    """
+    Wrapper function that aligns the selected resume bullet points with the
+    job description chunks using the editor.txt prompt.
+
+    :param resume: dict (experience_id -> list of bullets) or list of bullets
+    :param job_description_chunks: dict or list of job description sections
+    :param min_chars: minimum length constraint for the edited bullet text
+    :param max_chars: maximum length constraint for the edited bullet text
+    :return: The modified resume object in its original structure
+    """
+    # 1. Flatten the resume input to a list of bullet dicts if it is a dictionary
+    if isinstance(resume, dict):
+        flat_bullets = []
+        for exp_id, bullets in resume.items():
+            flat_bullets.extend(bullets)
+    elif isinstance(resume, list):
+        flat_bullets = resume
+    else:
+        flat_bullets = list(resume)
+
+    if not flat_bullets:
+        return resume
+
+    # 2. Strip embeddings from the bullets we send to the LLM to save tokens and prevent confusion
+    bullets_to_send = []
+    for b in flat_bullets:
+        if isinstance(b, dict):
+            b_copy = b.copy()
+            b_copy.pop("embedding", None)
+            bullets_to_send.append(b_copy)
+        else:
+            bullets_to_send.append(b)
+
+    # 3. Read the prompt template
+    prompt_template_path = os.path.join(current_dir, "prompts", "editor.txt")
+    if not os.path.exists(prompt_template_path):
+        # Fallback default prompt if file doesn't exist
+        prompt_text = (
+            "System: You are an expert resume editor. Align the user's resume bullet points to the provided job description chunks.\n"
+            "Inputs:\n- <resume_json>\n- <job_chunks>\n- <max_chars>\n- <min_chars>\n"
+            "Rules:\n1. Edit ONLY if Necessary.\n2. Modify ONLY \"text\".\n3. Do Not Fabricate.\n"
+            "4. WHO Formula.\n5. Strict Constraints.\n\nOutput Format:\nReturn ONLY the modified JSON array."
+        )
+    else:
+        with open(prompt_template_path, "r", encoding="utf-8") as f:
+            prompt_text = f.read()
+
+    # 4. Interpolate variables into the prompt template
+    prompt = prompt_text
+    prompt = prompt.replace("<resume_json>", json.dumps(bullets_to_send, indent=2))
+    prompt = prompt.replace("<job_chunks>", json.dumps(job_description_chunks, indent=2))
+    prompt = prompt.replace("<max_chars>", str(max_chars))
+    prompt = prompt.replace("<min_chars>", str(min_chars))
+
+    # 5. Call LLM
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite",
+            contents=prompt,
+            config={"temperature": 0.2}
+        )
+        
+        raw_response = response.text.strip()
+        
+        # Strip markdown fences if present
+        if raw_response.startswith("```"):
+            lines = raw_response.splitlines()
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            raw_response = "\n".join(lines).strip()
+
+        # Parse output JSON
+        modified_bullets = json.loads(raw_response)
+        
+        # 6. Apply updates back to the original objects in-place
+        bullet_text_map = {}
+        for i, b in enumerate(modified_bullets):
+            if isinstance(b, dict):
+                b_id = b.get("bullet_id")
+                if b_id:
+                    bullet_text_map[b_id] = b.get("text", "")
+                else:
+                    # Fallback to index-based mapping
+                    if i < len(flat_bullets):
+                        orig_id = flat_bullets[i].get("bullet_id")
+                        if orig_id:
+                            bullet_text_map[orig_id] = b.get("text", "")
+
+        for b in flat_bullets:
+            if isinstance(b, dict):
+                b_id = b.get("bullet_id")
+                if b_id in bullet_text_map:
+                    b["text"] = bullet_text_map[b_id]
+
+    except Exception as e:
+        print(f"Error during resume editing process: {e}")
+        # Return unmodified resume on failure
+
+    return resume

@@ -8,15 +8,30 @@ def generate_embedding(text: str) -> list:
     """
     Generate embeddings for a given text using the Gemini API.
     :param text: The text to generate embeddings for.
-    :return: A list of embeddings.
+    :return: A list of floats representing the embedding.
     """
     result = client.models.embed_content(
         model="gemini-embedding-001",
         contents=text
     )
-    return result.embeddings
+    if result.embeddings:
+        return result.embeddings[0].values
+    return []
 
 def embed(chunks):
+    if not chunks:
+        return []
+    embedded_chunks = []
     for chunk in chunks:
-        chunk['embedding'] = generate_embedding(chunk['text'])
-    return chunks
+        if isinstance(chunk, str):
+            embedded_chunks.append({
+                'text': chunk,
+                'embedding': generate_embedding(chunk)
+            })
+        elif isinstance(chunk, dict):
+            chunk['embedding'] = generate_embedding(chunk.get('text', ''))
+            embedded_chunks.append(chunk)
+        else:
+            embedded_chunks.append(chunk)
+    return embedded_chunks
+

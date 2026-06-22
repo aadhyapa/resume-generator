@@ -1,4 +1,4 @@
-def selector(ranked_bullets, total_limit, per_experience_limit):
+def selector(ranked_bullets: list, total_limit: int, per_experience_limit: int) -> dict:
     """
     Greedily fills bullets into a final selection, respecting both a global
     cap and a per-experience cap, walking the bullets in rank order (best
