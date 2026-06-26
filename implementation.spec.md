@@ -836,6 +836,53 @@ Retry policy:
 
 ## Suggested Implementation Order
 
+## Estimated Timeline
+
+These estimates assume one experienced full-stack engineer working primarily on this project, starting from the current codebase state. Calendar time can shrink with parallel engineering work, but only if responsibilities are split cleanly across backend, extension/frontend, infrastructure, and product/security review.
+
+### Prototype Estimate
+
+Expected duration: **2 to 4 weeks**.
+
+| Workstream | Estimate | Notes |
+| --- | ---: | --- |
+| Backend stabilization | 3 to 5 days | Add schemas, test resume JSON, chunker parsing fixes, input limits, and mocked tests. |
+| Chrome extension MVP | 4 to 7 days | Build Manifest V3 extension, page scraping, popup flow, backend call, and output display/copy behavior. |
+| End-to-end integration | 2 to 4 days | Exercise the extension against real job pages, fix scraping edge cases, and stabilize local developer setup. |
+| Buffer | 2 to 5 days | Covers LLM output-format issues, Chrome extension permission friction, and basic UX polish. |
+
+Prototype completion means the extension can scrape a real job posting, call the local backend, generate a tailored draft from test JSON, and show copyable output.
+
+### Production MVP Estimate
+
+Expected duration after prototype: **10 to 16 weeks** for a focused production MVP.
+
+| Workstream | Estimate | Notes |
+| --- | ---: | --- |
+| Product and UX decisions | 1 to 2 weeks | Choose auth provider, resume templates, export formats, pricing/free-tier assumptions, and extension-vs-web-app ownership. |
+| Auth and user data foundation | 2 to 3 weeks | Add auth, database migrations, user/profile/experience CRUD, authorization checks, and encrypted sensitive fields. |
+| Scalable generation pipeline | 2 to 4 weeks | Add queues/workers, generation statuses, cached chunks/embeddings, idempotency keys, retries, and provider error handling. |
+| Resume editor and approval workflow | 2 to 3 weeks | Build preview, edit-in-place, versioning, approval, diff/warning UI, and draft persistence. |
+| Export pipeline | 1 to 2 weeks | Render approved resumes to PDF and optionally DOCX, store artifacts, and expose downloads. |
+| Cost controls and observability | 1 to 2 weeks | Add rate limits, token accounting, spend caps, metrics, alerts, logs with PII redaction, and admin kill switches. |
+| Security and launch hardening | 1 to 2 weeks | Backups, secret management, production configuration, privacy/data-deletion flows, and deployment checklist. |
+
+Production MVP completion means authenticated users can enter experience, generate tailored resumes from captured job descriptions, edit and approve drafts, export final files, and operate under rate limits, token budgets, caching, encryption, and monitoring.
+
+### Realistic Total Timeline
+
+- **Prototype only:** 2 to 4 weeks.
+- **Prototype plus production MVP:** 3 to 5 months.
+- **More polished SaaS launch:** 5 to 8 months if adding billing, multiple resume templates, better import flows, stronger analytics, support tooling, and extensive browser/job-board compatibility.
+
+### Main Schedule Risks
+
+- Chrome scraping quality varies widely across job boards.
+- LLM JSON/schema adherence may require structured-output wrappers and robust retry logic.
+- Resume editor/export quality can take longer than expected because layout and PDF/DOCX fidelity are product-critical.
+- Security and privacy work should not be compressed because the app handles sensitive career and contact data.
+- Cost controls must be implemented before broad launch, not after, because uncontrolled retries and repeated generations can become expensive quickly.
+
 ### Sprint 1: Stabilize Existing Backend
 
 1. Add schemas.
