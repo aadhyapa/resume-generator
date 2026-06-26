@@ -883,6 +883,74 @@ Production MVP completion means authenticated users can enter experience, genera
 - Security and privacy work should not be compressed because the app handles sensitive career and contact data.
 - Cost controls must be implemented before broad launch, not after, because uncontrolled retries and repeated generations can become expensive quickly.
 
+## Recommended Weekend Goal
+
+For one weekend, the goal should be: **finish a local end-to-end prototype path, not the whole prototype**.
+
+By the end of the weekend, aim to prove this single flow:
+
+1. A known test resume JSON exists in the backend.
+2. A pasted or scraped job description can be sent to the backend.
+3. The backend returns selected resume bullets without crashing.
+4. The result can be viewed or copied from a minimal Chrome extension popup or, if the extension takes too long, from a simple local API test/client.
+
+### Weekend Scope
+
+Prioritize the smallest path that reduces uncertainty:
+
+| Priority | Task | Target Outcome |
+| --- | --- | --- |
+| 1 | Add `backend/agents/test_data/resume.json` | The existing `matchmaker.py` has real local data to rank. |
+| 2 | Fix the chunker contract mismatch | The backend expects a dictionary with `requirement`, `responsibility`, `bonus`, and `soft-skills` arrays. |
+| 3 | Add basic request validation | Empty or oversized job descriptions fail cleanly before expensive model calls. |
+| 4 | Add a smoke-test script or mocked route test | You can verify the backend path repeatedly without relying on manual clicking. |
+| 5 | Create the Chrome extension shell | A popup button can scrape or collect job text and send it to the local backend. |
+
+### Weekend Non-Goals
+
+Do not spend the weekend on:
+
+- Authentication.
+- Database design.
+- PDF/DOCX export.
+- Billing.
+- Full resume editing.
+- Perfect Chrome scraping across every job board.
+- Production-grade encryption, queues, or caching.
+
+Those are production-phase concerns. This weekend should answer one question: **can this concept work end-to-end with local test data?**
+
+### Suggested Weekend Breakdown
+
+#### Friday Evening
+
+- Re-read the current backend flow.
+- Create the test resume JSON.
+- Run the backend locally.
+- Confirm where the current `/generate_resume` path fails.
+
+#### Saturday
+
+- Fix schema/contract issues.
+- Add validation for empty and oversized job descriptions.
+- Add a mocked backend route test or smoke script.
+- Get one successful backend response from a realistic pasted job description.
+
+#### Sunday
+
+- Add the Chrome extension shell.
+- Implement basic job-text scraping and backend submission.
+- Display returned bullets in the popup.
+- Write down the top three next blockers for the following week.
+
+### Weekend Definition of Done
+
+- A test resume JSON is committed.
+- The backend can generate a resume-like response from one realistic job description.
+- There is at least one repeatable check, test, or script for the backend flow.
+- A minimal extension shell exists, even if scraping is imperfect.
+- Any known limitations are documented for the next sprint.
+
 ### Sprint 1: Stabilize Existing Backend
 
 1. Add schemas.
