@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from agents.validator import validate_resume
 from agents.job_description_chunker import job_description_chunker
@@ -9,6 +10,15 @@ from algorithms.matchmaker import matchmaker
 from algorithms.selector import selector
 
 app = FastAPI()
+
+# This makes sure that the cors won't cause issues with the extension
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/generate_resume")
 async def generate_resume(job_description: str):
