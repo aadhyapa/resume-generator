@@ -1,3 +1,13 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Puppies Play';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../../assets/PuppiesPlay-Regular.ttf') format('truetype');
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -5,7 +15,6 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -14,13 +23,8 @@
   -webkit-text-size-adjust: 100%;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+html {
+  background-color: transparent !important;
 }
 
 body {
@@ -29,11 +33,17 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #ff70b8;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  overflow: hidden;
 }
 
 h1 {
-  font-size: 3.2em;
+  font-family: 'Puppies Play', cursive;
+  font-size: 6em;
   line-height: 1.1;
+  font-weight: bold;
 }
 
 button {
@@ -46,24 +56,4 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }
