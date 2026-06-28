@@ -4,3 +4,4 @@ requests
 fastapi
 spacy
 google-genai
+uvicorn

@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
 from agents.validator import validate_resume
 from agents.job_description_chunker import job_description_chunker
@@ -21,7 +22,7 @@ app.add_middleware(
 )
 
 @app.post("/generate_resume")
-async def generate_resume(job_description: str):
+async def generate_resume(job_description: str = Body(..., embed=True)):
     try:
         job_description.strip()
         if not job_description:
@@ -115,3 +116,7 @@ async def generate_resume(job_description: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+if __name__ == "__main__":
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)

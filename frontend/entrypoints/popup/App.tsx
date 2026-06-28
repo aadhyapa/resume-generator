@@ -73,19 +73,14 @@ function App() {
 
   const handleGenerate = async () => {
     if (!jobDescription.trim()) return;
-    setStatus('generating');
-    setErrorMsg('');
-    try {
-      // TODO (LEARN): Call the backend API endpoint to customize/tailor the resume.
-      // 1. Make a POST request using fetch to http://localhost:8000/generate_resume
-      // 2. Pass JSON body containing { job_description: jobDescription, options: { ... } }
-      // 3. Handle non-ok status codes (e.g. read error body as JSON or text)
-      // 4. Update the state (resumeData) with the returned resume list/dictionary and set status to 'success'.
-    } catch (err: any) {
+    browser.runtime.sendMessage({
+      type: 'GENERATE_RESUME',
+      jobDescription
+    }).catch(err => {
       console.error(err);
-      setErrorMsg(err.message || 'Failed to connect to backend resume generation service.');
+      setErrorMsg(err.message || 'An unknown error occurred while generating resume.');
       setStatus('error');
-    }
+    });
   };
 
   const renderBullets = () => {

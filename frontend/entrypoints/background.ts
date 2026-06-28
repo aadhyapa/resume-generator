@@ -10,35 +10,49 @@ export default defineBackground(() => {
         }
       });
 
-      const response = fetch('http://localhost:8000/generate_resume', {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutes timeout
+
+      fetch('http://localhost:8000/generate_resume', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ job_description: message.jobDescription }),
-      }).then((result) => {
-        if (result.ok) {
-          result.json().then((data) => {
-            browser.storage.local.set({
-              generationState: {
-                status: 'success',
-                jobDescription: data.jobDescription,
-                resumeData: data.resume,
-                errorMsg: '',
-              }
-            });
+        signal: controller.signal,
+      })
+        .then((result) => {
+          clearTimeout(timeoutId);
+          if (result.ok) {
+            return result.json();
+          } else {
+            throw new Error('Failed to generate resume.');
+          }
+        })
+        .then((data) => {
+          browser.storage.local.set({
+            generationState: {
+              status: 'success',
+              jobDescription: message.jobDescription,
+              resumeData: data.resume,
+              errorMsg: '',
+            }
           });
-        } else {
+        })
+        .catch((err) => {
+          clearTimeout(timeoutId);
+          const isTimeout = err.name === 'AbortError';
           browser.storage.local.set({
             generationState: {
               status: 'error',
               jobDescription: message.jobDescription,
               resumeData: null,
-              errorMsg: 'Failed to generate resume.',
+              errorMsg: isTimeout
+                ? 'Generation timed out. The server took too long to respond.'
+                : (err.message || 'Failed to generate resume.'),
             }
           });
-        }
-      });
+        });
     }
   });
 });
