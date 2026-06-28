@@ -18,6 +18,39 @@ function App() {
   const [errorMsg, setErrorMsg] = useState('');
   const [resumeData, setResumeData] = useState<ResumeResponse | null>(null);
 
+  function updateState(locallyStoredState: unknown) {
+    if (!locallyStoredState) return;
+    if (typeof locallyStoredState === 'object') {
+      const state = locallyStoredState as {
+        jobDescription?: string;
+        status?: 'idle' | 'scraping' | 'scraped' | 'generating' | 'success' | 'error';
+        resumeData?: ResumeResponse | null;
+        errorMsg?: string;
+      };
+      if (state.jobDescription !== undefined) setJobDescription(state.jobDescription);
+      if (state.status !== undefined) setStatus(state.status);
+      if (state.resumeData !== undefined) setResumeData(state.resumeData);
+      if (state.errorMsg !== undefined) setErrorMsg(state.errorMsg);
+    }
+  }
+
+  // Mounting hooks
+  useEffect(() => {
+    browser.storage.local.get('generationState').then((result: any) => {
+      if (result && result.generationState) {
+        updateState(result.generationState);
+      }
+    });
+    const listener = (changes: Record<string, Browser.storage.StorageChange>, area: string) => {
+      if (area === 'local' && changes.generationState) {
+        updateState(changes.generationState.newValue);
+      }
+    };
+    browser.storage.onChanged.addListener(listener);
+    return () => browser.storage.onChanged.removeListener(listener);
+  }, []);
+
+  // Scraping page
   const handleScrape = async () => {
     setStatus('scraping');
     setErrorMsg('');
