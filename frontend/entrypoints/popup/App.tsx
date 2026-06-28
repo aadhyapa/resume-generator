@@ -147,11 +147,11 @@ function App() {
 
       <div className="space-y-4">
         {/* Main Action Buttons */}
-        <div className="flex gap-2">
+        <div className="flex justify-center">
           <Button
             onClick={handleScrape}
             disabled={status === 'scraping' || status === 'generating'}
-            className="flex-1 py-2.5 bg-white/20 hover:bg-white/35 active:bg-white/45 text-white rounded-xl font-bold transition-all duration-300 shadow-md backdrop-blur-md border border-white/20 flex items-center justify-center gap-2 cursor-pointer"
+            className="tailor-button"
           >
             {status === 'scraping' ? (
               <>
@@ -162,7 +162,7 @@ function App() {
                 Scraping...
               </>
             ) : (
-              'Scrape Job Page'
+              'Tailor'
             )}
           </Button>
         </div>
@@ -178,7 +178,7 @@ function App() {
         {(status === 'scraped' || status === 'generating' || status === 'success' || status === 'error' || jobDescription) && (
           <div className="space-y-3">
             <div className="flex justify-between items-center text-[11px] text-white/90 px-1 font-semibold">
-              <span>Scraped Job Description:</span>
+              <span></span>
               <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-normal">
                 {jobDescription.length} chars
               </span>

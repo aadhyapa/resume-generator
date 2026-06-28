@@ -5,6 +5,12 @@
   justify-content: flex-start;
   min-height: 100vh;
   width: 100%;
+  padding: 0.6em;
+  box-sizing: border-box;
+  background-color: #ff70b8;
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 0.5em rgb(255, 255, 255);
+  overflow: hidden;
 }
 
 /* Custom Scrollbar styling for a premium look */
@@ -29,9 +35,12 @@
 
 /* Custom glow/pulse for high fidelity styling */
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 10px rgba(236, 72, 153, 0.2);
   }
+
   50% {
     box-shadow: 0 0 20px rgba(236, 72, 153, 0.5);
   }
