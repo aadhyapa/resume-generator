@@ -135,7 +135,7 @@ function App() {
   };
 
   return (
-    <div className="w-[360px] p-5 text-white select-none">
+    <div className="w-full p-5 text-white select-none">
       <div className="flex flex-col items-center mb-5">
         <h1 className="text-6xl tracking-tight drop-shadow-md select-none text-white leading-none mb-2">
           Rezmaker
@@ -192,23 +192,25 @@ function App() {
             />
 
             {/* Generate Action */}
-            <Button
-              onClick={handleGenerate}
-              disabled={status === 'generating' || !jobDescription.trim()}
-              className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 active:from-pink-700 active:to-rose-700 text-white rounded-xl font-bold transition-all duration-300 shadow-lg shadow-pink-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-none"
-            >
-              {status === 'generating' ? (
-                <>
-                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Tailoring Resume...
-                </>
-              ) : (
-                'Generate Tailored Resume'
-              )}
-            </Button>
+            <div className="flex justify-center">
+              <Button
+                onClick={handleGenerate}
+                disabled={status === 'generating' || !jobDescription.trim()}
+                className="flex justify-center"
+              >
+                {status === 'generating' ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Tailoring Resume...
+                  </>
+                ) : (
+                  'Generate Tailored Resume'
+                )}
+              </Button>
+            </div>
           </div>
         )}
 
@@ -216,9 +218,6 @@ function App() {
         {status === 'success' && resumeData && (
           <div className="space-y-3 pt-1">
             <div className="flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 p-3 rounded-xl text-xs text-emerald-250">
-              <svg className="h-4 w-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
               <span>Resume Tailoring complete! Tailored bullets:</span>
             </div>
 

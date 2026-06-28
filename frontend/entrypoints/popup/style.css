@@ -50,11 +50,15 @@ button {
   padding-right: 0.7em;
   background-color: #5d003b;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .tailor-button {
   font-family: 'Puppies Play', cursive;
   font-size: 3em;
+  font-weight: bold;
 }
 
 /* #app {
