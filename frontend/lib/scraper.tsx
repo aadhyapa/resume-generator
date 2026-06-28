@@ -28,12 +28,29 @@ function findJobDescription() {
 
     function findResumeText() {
         const selectors = [
-            'div[class*="job"]',
-            'section[class*="job"]',
-            'article[class*="job"]',
-            'div[class*="jobdescription"]',
-            'section[class*="jobdescription"]',
-            'article[class*="jobdescription"]',
+            // Specific job board containers (LinkedIn, Indeed, Amazon, etc.)
+            '.jobs-description',
+            '.jobs-description-content',
+            '.jobs-box__html-content',
+            '#jobDescriptionText',
+            '.jobsearch-JobComponent-description',
+            '.job-description-section',
+            '#job-detail-body',
+            // Generic description selectors
+            '.job-description',
+            '.description',
+            '#job-description',
+            '#jobDescription',
+            '#description',
+            '[id*="job-description"]',
+            '[class*="job-description"]',
+            '[class*="jobDescription"]',
+            '[id*="jobDescription"]',
+            '[class*="job_description"]',
+            // Core main content elements
+            'main',
+            'article',
+            '#content'
         ];
 
         for (const selector of selectors) {
