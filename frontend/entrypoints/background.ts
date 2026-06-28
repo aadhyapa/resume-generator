@@ -2,7 +2,12 @@ export default defineBackground(() => {
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'GENERATE_RESUME') {
       browser.storage.local.set({
-        generationState: 'generating'
+        generationState: {
+          status: 'generating',
+          jobDescription: message.jobDescription,
+          resumeData: null,
+          errorMsg: '',
+        }
       });
 
       const response = fetch('http://localhost:8000/generate_resume', {
