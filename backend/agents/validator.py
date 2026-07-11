@@ -67,13 +67,17 @@ def validate_resume(original_resume, edited_resume, min_chars=50, max_chars=300)
         orig_bullet = orig_map.get(bullet_id)
         if orig_bullet:
             orig_text = orig_bullet.get("text", "")
+            is_edited = orig_text != text
+            edit_bullet["edited"] = is_edited
             # Only check for fabrication if the text actually changed
-            if orig_text != text:
+            if is_edited:
                 comparisons.append({
                     "id": bullet_id,
                     "original": orig_text,
                     "edited": text
                 })
+        else:
+            edit_bullet["edited"] = False
 
     # 2. Run LLM-based Fabrication Check (only if there are modifications)
     fab_failures = []
