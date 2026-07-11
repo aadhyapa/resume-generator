@@ -3,8 +3,9 @@ def formater(edited_bullets, resume):
     final_resume = {}
 
     final_resume["header"] = resume["header"]
+    final_resume["skills"] = resume["skills"]
 
-    final_resume["sections"] = resume["sections"]
+    final_resume["sections"] = {}
 
     sectioned_bullets = {}
     for bullet in edited_bullets:
