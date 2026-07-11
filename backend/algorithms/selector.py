@@ -11,7 +11,8 @@ def selector(ranked_bullets: list, total_limit: int, per_experience_limit: int) 
     :param per_experience_limit: max bullets allowed per experience
     :return: dict {experience_id: [bullets sorted by score desc]}
     """
-    buckets = {}
+    selected = []
+    experience_counts = {}
     total_count = 0
 
     for bullet in ranked_bullets:
@@ -20,13 +21,14 @@ def selector(ranked_bullets: list, total_limit: int, per_experience_limit: int) 
 
         exp_id = bullet["experience_id"]
 
-        if exp_id not in buckets:
-            buckets[exp_id] = []
+        if exp_id not in experience_counts:
+            experience_counts[exp_id] = 0
 
-        if len(buckets[exp_id]) >= per_experience_limit:
+        if experience_counts[exp_id] >= per_experience_limit:
             continue
 
-        buckets[exp_id].append(bullet)
+        selected.append(bullet)
+        experience_counts[exp_id] += 1
         total_count += 1
 
-    return buckets
+    return selected
