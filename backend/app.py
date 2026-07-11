@@ -41,9 +41,7 @@ async def generate_resume(job_description: str = Body(..., embed=True)):
         soft_skills_embedding = embed(sectioned_chunks['soft-skills'])
 
         # Load resume bullets from the generated test data resume JSON
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        backend_dir = os.path.dirname(current_dir)
-        resume_path = os.path.join(backend_dir, "agents", "test_data", "resume.json")
+        resume_path = os.path.join("test_data", "resume_data_embedded.json")
 
         if os.path.exists(resume_path):
             try:
