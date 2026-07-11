@@ -1,6 +1,9 @@
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import json
+import copy
+import os
 
 from agents.validator import validate_resume
 from agents.job_description_chunker import job_description_chunker
@@ -9,6 +12,7 @@ from agents.editor import editor
 
 from algorithms.matchmaker import matchmaker
 from algorithms.selector import selector
+from algorithms.formatter import formater
 
 app = FastAPI()
 
@@ -28,27 +32,39 @@ async def generate_resume(job_description: str = Body(..., embed=True)):
         if not job_description:
             raise HTTPException(status_code=400, detail="Job description cannot be empty")
 
+        # Processing Job Description
         sectioned_chunks = job_description_chunker(job_description)
-    
+        
         requirement_embeddings = embed(sectioned_chunks['requirement'])
         responsibility_embeddings = embed(sectioned_chunks['responsibility'])
         bonus_embeddings = embed(sectioned_chunks['bonus'])
         soft_skills_embedding = embed(sectioned_chunks['soft-skills'])
 
-        resume_bullets = matchmaker(requirement_embeddings, responsibility_embeddings, bonus_embeddings, soft_skills_embedding)
+        # Load resume bullets from the generated test data resume JSON
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        backend_dir = os.path.dirname(current_dir)
+        resume_path = os.path.join(backend_dir, "agents", "test_data", "resume.json")
 
-        selected_bullets = selector(resume_bullets, 20, 4)
+        if os.path.exists(resume_path):
+            try:
+                with open(resume_path, "r", encoding="utf-8") as f:
+                    # Use a deep copy to avoid modifying the original database reference in-place across request
+                    resume = copy.deepcopy(json.load(f))
+                    resume_bullets = resume["bullets"]
 
-        import copy
+            except Exception as e:
+                print(f"Error loading test resume: {e}")
+                resume_bullets = []
+        else:
+            resume_bullets = []
+
+        # Finding best bullet matches
+        scored_resume_bullets = matchmaker(requirement_embeddings, responsibility_embeddings, bonus_embeddings, soft_skills_embedding, resume_bullets)
+        selected_bullets = selector(scored_resume_bullets, 20, 4)
+
         # Keep a clean deep copy of original bullets for comparison and fallback
         original_bullets = copy.deepcopy(selected_bullets)
 
-        def get_flat_bullets(res):
-            if isinstance(res, dict):
-                return [b for items in res.values() for b in items]
-            elif isinstance(res, list):
-                return res
-            return list(res)
 
         edited_resume = selected_bullets
         max_attempts = 2
@@ -60,29 +76,30 @@ async def generate_resume(job_description: str = Body(..., embed=True)):
                 edited_resume = editor(selected_bullets, sectioned_chunks)
             else:
                 # 2nd Attempt: Only re-edit bullets that failed validation
-                orig_flat = get_flat_bullets(original_bullets)
-                edit_flat = get_flat_bullets(edited_resume)
-                orig_map = {b["bullet_id"]: b for b in orig_flat if "bullet_id" in b}
+                orig_map = {b["bullet_id"]: b for b in original_bullets if "bullet_id" in b}
                 
-                # Reset failed bullets to their original text before retrying
-                for b in edit_flat:
+                # Construct subset of only failed bullets, reset to original text
+                failed_subset = []
+                for b in edited_resume:
                     b_id = b.get("bullet_id")
                     if b_id in failed_ids and b_id in orig_map:
-                        b["text"] = orig_map[b_id]["text"]
-                        b.pop("bold_words", None)
+                        reset_bullet = copy.deepcopy(orig_map[b_id])
+                        reset_bullet.pop("bold_words", None)
+                        failed_subset.append(reset_bullet)
 
-                # Construct subset of only failed bullets to feed to editor
-                if isinstance(edited_resume, dict):
-                    failed_subset = {}
-                    for exp_id, items in edited_resume.items():
-                        failed_in_exp = [b for b in items if b.get("bullet_id") in failed_ids]
-                        if failed_in_exp:
-                            failed_subset[exp_id] = failed_in_exp
-                else:
-                    failed_subset = [b for b in edited_resume if b.get("bullet_id") in failed_ids]
+                # Run editor on the subset and capture the returned edited list
+                edited_subset = editor(failed_subset, sectioned_chunks)
+                edited_subset_map = {b["bullet_id"]: b for b in edited_subset if "bullet_id" in b}
 
-                # Run editor on the subset (modifies references in edited_resume)
-                editor(failed_subset, sectioned_chunks)
+                # Construct new list with edited subset merged back in
+                new_edited_resume = []
+                for b in edited_resume:
+                    b_id = b.get("bullet_id")
+                    if b_id in edited_subset_map:
+                        new_edited_resume.append(edited_subset_map[b_id])
+                    else:
+                        new_edited_resume.append(b)
+                edited_resume = new_edited_resume
 
             # Validate current state
             validation_report = validate_resume(original_bullets, edited_resume)
@@ -99,23 +116,37 @@ async def generate_resume(job_description: str = Body(..., embed=True)):
 
                 # If this was the final attempt, restore original bullets for all failures
                 if attempt == max_attempts:
-                    orig_flat = get_flat_bullets(original_bullets)
-                    edit_flat = get_flat_bullets(edited_resume)
-                    orig_map = {b["bullet_id"]: b for b in orig_flat if "bullet_id" in b}
-
-                    for b in edit_flat:
+                    orig_map = {b["bullet_id"]: b for b in original_bullets if "bullet_id" in b}
+                    new_edited_resume = []
+                    for b in edited_resume:
                         b_id = b.get("bullet_id")
                         if b_id in failed_ids and b_id in orig_map:
-                            b["text"] = orig_map[b_id]["text"]
-                            if "bold_words" in orig_map[b_id]:
-                                b["bold_words"] = orig_map[b_id]["bold_words"]
-                            else:
-                                b.pop("bold_words", None)
+                            restored_bullet = copy.deepcopy(orig_map[b_id])
+                            restored_bullet["edited"] = False
+                            new_edited_resume.append(restored_bullet)
+                        else:
+                            new_edited_resume.append(b)
+                    edited_resume = new_edited_resume
+
+                assembled_resume = formater(edited_resume)
         
-        return {"message": "Resume generated successfully", "resume": edited_resume}
+        return {"message": "Resume generated successfully", "resume": assembled_resume}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/store-resume")
+def store_resume(resume):
+    # In the future, create a db entry
+    resume['bullets' ] = embed(resume['bullets'])
+
+    with open("test_data/resume1.json", "w") as file:
+        file.write(json.dumps(resume))
+
+    
+
+
 
 
 if __name__ == "__main__":
