@@ -137,17 +137,18 @@ async def generate_resume(job_description: str = Body(..., embed=True)):
 
 
 @app.post("/store-resume")
-def store_resume(resume):
-    # In the future, create a db entry
-    resume['bullets' ] = embed(resume['bullets'])
+def store_resume(resume: dict = Body(...)):
+    try:
+        # In the future, create a db entry
+        resume['bullets' ] = embed(resume['bullets'])
 
-    with open("test_data/resume1.json", "w") as file:
-        file.write(json.dumps(resume))
-
-    
-
-
-
+        os.makedirs("test_data", exist_ok=True)
+        with open("test_data/resume_data_embedded.json", "w") as file:
+            file.write(json.dumps(resume, indent=2))
+        return {"message": "Resume stored successfully"}
+    except Exception as e:
+        print(e)
+        return {"message": "Resume not stored. Sorry!"}
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
