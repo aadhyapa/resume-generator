@@ -154,7 +154,7 @@ async def generate_resume(job_description: str = Body(..., embed=True)):
                     edited_resume = new_edited_resume
 
                 logger.info("Running formatter")
-                assembled_resume = formater(edited_resume)
+                assembled_resume = formater(edited_resume, resume)
         
         logger.info("generate_resume completed successfully")
         return {"message": "Resume generated successfully", "resume": assembled_resume}

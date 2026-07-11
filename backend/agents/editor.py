@@ -28,7 +28,14 @@ def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
     """
     logger.info("Entering editor")
     # 1. Flatten the resume input to a list of bullet dicts if it is a dictionary
-    trimmed_resume = [{'bullet_id': bullet['bullet_id'], 'text': bullet['text']} for bullet in resume]
+    flat_resume = []
+    if isinstance(resume, dict):
+        for bullets_list in resume.values():
+            flat_resume.extend(bullets_list)
+    else:
+        flat_resume = resume
+
+    trimmed_resume = [{'bullet_id': bullet['bullet_id'], 'text': bullet['text']} for bullet in flat_resume if isinstance(bullet, dict) and 'bullet_id' in bullet]
 
     # 2. Read the prompt template
     prompt_template_path = os.path.join(current_dir, "prompts", "editor.txt")
@@ -50,6 +57,8 @@ def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
     prompt = prompt.replace("<job_chunks>", json.dumps(job_description_chunks, indent=2))
     prompt = prompt.replace("<max_chars>", str(max_chars))
     prompt = prompt.replace("<min_chars>", str(min_chars))
+
+    modified_bullets = None
 
     # 4. Call LLM
     try:
@@ -75,7 +84,44 @@ def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
 
     except Exception as e:
         logger.error(f"Error during resume editing process: {e}", exc_info=True)
-        # Return unmodified resume on failure
+        # Fallback to original bullets on failure
+        modified_bullets = trimmed_resume
+
+    # Merge modifications back into original bullets to preserve all metadata keys (e.g. sub_section_id)
+    modified_map = {}
+    if isinstance(modified_bullets, list):
+        for b in modified_bullets:
+            if isinstance(b, dict) and 'bullet_id' in b:
+                modified_map[b['bullet_id']] = b
+
+    final_bullets = []
+    for orig_b in flat_resume:
+        if not isinstance(orig_b, dict):
+            final_bullets.append(orig_b)
+            continue
+        b_id = orig_b.get('bullet_id')
+        if b_id in modified_map:
+            merged_b = dict(orig_b)
+            merged_b['text'] = modified_map[b_id].get('text', orig_b.get('text'))
+            if 'bold_words' in modified_map[b_id]:
+                merged_b['bold_words'] = modified_map[b_id]['bold_words']
+            merged_b['edited'] = merged_b['text'] != orig_b.get('text')
+            final_bullets.append(merged_b)
+        else:
+            final_bullets.append(dict(orig_b))
 
     logger.info("Exiting editor")
-    return modified_bullets
+    if isinstance(resume, dict):
+        final_dict = {}
+        for b in final_bullets:
+            if not isinstance(b, dict) or 'bullet_id' not in b:
+                continue
+            for k, v in resume.items():
+                if any(isinstance(orig_b, dict) and orig_b.get('bullet_id') == b['bullet_id'] for orig_b in v):
+                    if k not in final_dict:
+                        final_dict[k] = []
+                    final_dict[k].append(b)
+                    break
+        return final_dict
+    else:
+        return final_bullets

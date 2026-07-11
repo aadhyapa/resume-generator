@@ -10,10 +10,10 @@ def selector(ranked_bullets: list, total_limit: int, per_experience_limit: int) 
 
     :param ranked_bullets: list of dicts, already sorted by relevance score
                             descending. Each dict must have at least:
-                            {"bullet_id": ..., "experience_id": ..., "score": ...}
+                            {"bullet_id": ..., "sub_section_id": ..., "score": ...}
     :param total_limit: max total bullets allowed across the whole resume
     :param per_experience_limit: max bullets allowed per experience
-    :return: dict {experience_id: [bullets sorted by score desc]}
+    :return: dict {sub_section_id: [bullets sorted by score desc]}
     """
     logger.info("Entering selector")
     selected = []
@@ -24,7 +24,7 @@ def selector(ranked_bullets: list, total_limit: int, per_experience_limit: int) 
         if total_count >= total_limit:
             break
 
-        exp_id = bullet["experience_id"]
+        exp_id = bullet["sub_section_id"]
 
         if exp_id not in experience_counts:
             experience_counts[exp_id] = 0

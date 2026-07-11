@@ -18,7 +18,7 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 def _extract_bullets(resume) -> dict:
     """
     Helper to extract bullet dicts keyed by bullet_id from a resume structure.
-    Handles both dict (experience_id -> list of bullets) and flat list formats.
+    Handles both dict (sub_section_id -> list of bullets) and flat list formats.
     """
     bullets = {}
     if isinstance(resume, dict):
