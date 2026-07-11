@@ -24,29 +24,9 @@ def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
     :return: The modified resume object in its original structure
     """
     # 1. Flatten the resume input to a list of bullet dicts if it is a dictionary
-    if isinstance(resume, dict):
-        flat_bullets = []
-        for exp_id, bullets in resume.items():
-            flat_bullets.extend(bullets)
-    elif isinstance(resume, list):
-        flat_bullets = resume
-    else:
-        flat_bullets = list(resume)
+    trimmed_resume = [{'bullet_id': bullet['bullet_id'], 'text': bullet['text']} for bullet in resume]
 
-    if not flat_bullets:
-        return resume
-
-    # 2. Strip embeddings from the bullets we send to the LLM to save tokens and prevent confusion
-    bullets_to_send = []
-    for b in flat_bullets:
-        if isinstance(b, dict):
-            b_copy = b.copy()
-            b_copy.pop("embedding", None)
-            bullets_to_send.append(b_copy)
-        else:
-            bullets_to_send.append(b)
-
-    # 3. Read the prompt template
+    # 2. Read the prompt template
     prompt_template_path = os.path.join(current_dir, "prompts", "editor.txt")
     if not os.path.exists(prompt_template_path):
         # Fallback default prompt if file doesn't exist
@@ -60,14 +40,14 @@ def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
         with open(prompt_template_path, "r", encoding="utf-8") as f:
             prompt_text = f.read()
 
-    # 4. Interpolate variables into the prompt template
+    # 3. Interpolate variables into the prompt template
     prompt = prompt_text
-    prompt = prompt.replace("<resume_json>", json.dumps(bullets_to_send, indent=2))
+    prompt = prompt.replace("<resume_json>", json.dumps(trimmed_resume, indent=2))
     prompt = prompt.replace("<job_chunks>", json.dumps(job_description_chunks, indent=2))
     prompt = prompt.replace("<max_chars>", str(max_chars))
     prompt = prompt.replace("<min_chars>", str(min_chars))
 
-    # 5. Call LLM
+    # 4. Call LLM
     try:
         response = client.models.generate_content(
             model="gemini-3.1-flash-lite",
@@ -88,29 +68,9 @@ def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
 
         # Parse output JSON
         modified_bullets = json.loads(raw_response)
-        
-        # 6. Apply updates back to the original objects in-place
-        bullet_text_map = {}
-        for i, b in enumerate(modified_bullets):
-            if isinstance(b, dict):
-                b_id = b.get("bullet_id")
-                if b_id:
-                    bullet_text_map[b_id] = b.get("text", "")
-                else:
-                    # Fallback to index-based mapping
-                    if i < len(flat_bullets):
-                        orig_id = flat_bullets[i].get("bullet_id")
-                        if orig_id:
-                            bullet_text_map[orig_id] = b.get("text", "")
-
-        for b in flat_bullets:
-            if isinstance(b, dict):
-                b_id = b.get("bullet_id")
-                if b_id in bullet_text_map:
-                    b["text"] = bullet_text_map[b_id]
 
     except Exception as e:
         print(f"Error during resume editing process: {e}")
         # Return unmodified resume on failure
 
-    return resume
+    return modified_bullets
