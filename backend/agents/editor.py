@@ -1,7 +1,10 @@
 import os
 import json
+import logging
 from google import genai
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 # Find directory paths
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -23,6 +26,7 @@ def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
     :param max_chars: maximum length constraint for the edited bullet text
     :return: The modified resume object in its original structure
     """
+    logger.info("Entering editor")
     # 1. Flatten the resume input to a list of bullet dicts if it is a dictionary
     trimmed_resume = [{'bullet_id': bullet['bullet_id'], 'text': bullet['text']} for bullet in resume]
 
@@ -70,7 +74,8 @@ def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
         modified_bullets = json.loads(raw_response)
 
     except Exception as e:
-        print(f"Error during resume editing process: {e}")
+        logger.error(f"Error during resume editing process: {e}", exc_info=True)
         # Return unmodified resume on failure
 
+    logger.info("Exiting editor")
     return modified_bullets

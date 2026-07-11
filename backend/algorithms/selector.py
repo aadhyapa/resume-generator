@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 def selector(ranked_bullets: list, total_limit: int, per_experience_limit: int) -> dict:
     """
     Greedily fills bullets into a final selection, respecting both a global
@@ -11,6 +15,7 @@ def selector(ranked_bullets: list, total_limit: int, per_experience_limit: int) 
     :param per_experience_limit: max bullets allowed per experience
     :return: dict {experience_id: [bullets sorted by score desc]}
     """
+    logger.info("Entering selector")
     selected = []
     experience_counts = {}
     total_count = 0
@@ -31,4 +36,5 @@ def selector(ranked_bullets: list, total_limit: int, per_experience_limit: int) 
         experience_counts[exp_id] += 1
         total_count += 1
 
+    logger.info("Exiting selector")
     return selected

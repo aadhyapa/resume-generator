@@ -1,7 +1,10 @@
 import os
 import json
+import logging
 from google import genai
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 # Find directory paths
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -44,7 +47,7 @@ def validate_resume(original_resume, edited_resume, min_chars=50, max_chars=300)
              - "is_valid": bool
              - "character_limit_failures": list of failures
              - "fabrication_failures": list of failures
-    """
+     """
     orig_map = _extract_bullets(original_resume)
     edit_map = _extract_bullets(edited_resume)
 
@@ -92,6 +95,7 @@ def validate_resume(original_resume, edited_resume, min_chars=50, max_chars=300)
         contents = f"{prompt_text}\n\nInput JSON:\n{json.dumps(comparisons, indent=2)}"
 
         try:
+            logger.info(f"Sending {len(comparisons)} bullet comparisons to Gemini fabrication validator...")
             response = client.models.generate_content(
                 model="gemini-3.1-flash-lite",
                 contents=contents,
@@ -113,7 +117,7 @@ def validate_resume(original_resume, edited_resume, min_chars=50, max_chars=300)
                 fab_failures = json.loads(raw_response)
         except Exception as e:
             # If the validation API call fails, log the failure details but do not crash
-            print(f"Error during fabrication check API call: {e}")
+            logger.error(f"Error during fabrication check API call: {e}", exc_info=True)
             fab_failures = [{
                 "id": "API_ERROR",
                 "reason": f"Fabrication check failed to execute: {str(e)}"
