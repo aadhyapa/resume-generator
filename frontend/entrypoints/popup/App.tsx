@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import { Button } from '../../components/button';
 import { getJobDescription } from '../../lib/scraper';
@@ -69,6 +69,21 @@ function App() {
       setErrorMsg(err.message || 'An unknown error occurred while scraping.');
       setStatus('error');
     }
+  };
+
+  const handleClear = () => {
+    setJobDescription('');
+    setResumeData(null);
+    setErrorMsg('');
+    setStatus('idle');
+    browser.storage.local.set({
+      generationState: {
+        status: 'idle',
+        jobDescription: '',
+        resumeData: null,
+        errorMsg: '',
+      }
+    });
   };
 
   const handleGenerate = async () => {
@@ -191,8 +206,17 @@ function App() {
               className="w-full h-32 bg-black/30 text-white/95 placeholder-white/50 border border-white/25 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all duration-300 resize-none font-sans leading-relaxed scrollbar-thin scrollbar-thumb-white/20"
             />
 
-            {/* Generate Action */}
-            <div className="flex justify-center">
+            {/* Clear / Generate Actions */}
+            <div className="resume-actions">
+              <Button
+                type="button"
+                onClick={handleClear}
+                disabled={status === 'generating' || !jobDescription}
+                aria-label="Clear job description"
+                className="clear-button"
+              >
+                Clear
+              </Button>
               <Button
                 onClick={handleGenerate}
                 disabled={status === 'generating' || !jobDescription.trim()}
