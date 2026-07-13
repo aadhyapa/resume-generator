@@ -48,3 +48,19 @@
 .button-glow {
   animation: pulse-glow 3s infinite;
 }
+
+.resume-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.clear-button {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.clear-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
