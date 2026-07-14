@@ -18,9 +18,11 @@ function App() {
       const state = locallyStoredState as GenerationState;
       if (state.jobDescription !== undefined) setJobDescription(state.jobDescription);
       if (state.status !== undefined) setStatus(state.status);
-      if (state.resumeData !== undefined) {
-        setResumeData(isResume(state.resumeData) ? state.resumeData : null);
-      }
+if (state.resumeData !== undefined) {
+  const nextResume = isResume(state.resumeData) ? state.resumeData : null;
+  setResumeData(nextResume);
+  if (!nextResume && state.status === 'success') setStatus('idle');
+}
       if (state.errorMsg !== undefined) setErrorMsg(state.errorMsg);
     }
   }
