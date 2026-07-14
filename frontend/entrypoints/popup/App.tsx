@@ -2,34 +2,25 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import { Button } from '../../components/button';
 import { getJobDescription } from '../../lib/scraper';
-
-interface Bullet {
-  bullet_id: string;
-  experience_id: string;
-  text: string;
-  bold_words?: string[];
-}
-
-type ResumeResponse = Record<string, Bullet[]> | Bullet[];
+import { ResumePreview } from './components/ResumePreview';
+import type { GenerationState, GenerationStatus, Resume } from './types';
+import { isResume } from './utils/resume';
 
 function App() {
   const [jobDescription, setJobDescription] = useState('');
-  const [status, setStatus] = useState<'idle' | 'scraping' | 'scraped' | 'generating' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<GenerationStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-  const [resumeData, setResumeData] = useState<ResumeResponse | null>(null);
+  const [resumeData, setResumeData] = useState<Resume | null>(null);
 
   function updateState(locallyStoredState: unknown) {
     if (!locallyStoredState) return;
     if (typeof locallyStoredState === 'object') {
-      const state = locallyStoredState as {
-        jobDescription?: string;
-        status?: 'idle' | 'scraping' | 'scraped' | 'generating' | 'success' | 'error';
-        resumeData?: ResumeResponse | null;
-        errorMsg?: string;
-      };
+      const state = locallyStoredState as GenerationState;
       if (state.jobDescription !== undefined) setJobDescription(state.jobDescription);
       if (state.status !== undefined) setStatus(state.status);
-      if (state.resumeData !== undefined) setResumeData(state.resumeData);
+      if (state.resumeData !== undefined) {
+        setResumeData(isResume(state.resumeData) ? state.resumeData : null);
+      }
       if (state.errorMsg !== undefined) setErrorMsg(state.errorMsg);
     }
   }
@@ -98,56 +89,6 @@ function App() {
     });
   };
 
-  const renderBullets = () => {
-    if (!resumeData) return null;
-
-    // Helper to bold specific words in a text
-    const highlightText = (text: string, boldWords?: string[]) => {
-      // TODO (LEARN): Create a helper function that returns React elements (or styled text)
-      // highlighting any word that matches one of the values inside boldWords.
-      // 1. Return raw text if boldWords is empty or missing.
-      // 2. Create a case-insensitive regex pattern matching any of the boldWords as word bounds (\b).
-      // 3. Split the text using that regex pattern.
-      // 4. Map over the split parts. If a part matches one of the boldWords, wrap it inside a styled <strong className="text-yellow-250 font-bold"> tag. Otherwise, return the plain text part.
-      return text;
-    };
-
-    if (Array.isArray(resumeData)) {
-      return (
-        <ul className="space-y-3 text-left">
-          {resumeData.map((bullet) => (
-            <li key={bullet.bullet_id} className="bg-white/10 p-3 rounded-lg border border-white/10 backdrop-blur-sm text-sm transition-all duration-300 hover:bg-white/15">
-              <span className="text-xs text-pink-200 uppercase font-semibold block mb-1">
-                {bullet.experience_id}
-              </span>
-              <p className="text-white/90">
-                {highlightText(bullet.text, bullet.bold_words)}
-              </p>
-            </li>
-          ))}
-        </ul>
-      );
-    }
-
-    return (
-      <div className="space-y-6 text-left">
-        {Object.entries(resumeData).map(([experienceId, bullets]) => (
-          <div key={experienceId} className="bg-black/25 p-4 rounded-xl border border-white/10 backdrop-blur-md">
-            <h3 className="text-pink-300 font-semibold text-xs uppercase tracking-wider mb-2 border-b border-pink-500/20 pb-1">
-              Experience: {experienceId}
-            </h3>
-            <ul className="space-y-2">
-              {bullets.map((bullet) => (
-                <li key={bullet.bullet_id} className="text-xs text-white/95 leading-relaxed relative pl-3 before:content-['•'] before:absolute before:left-0 before:text-pink-400">
-                  {highlightText(bullet.text, bullet.bold_words)}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    );
-  };
 
   return (
     <div className="w-full p-5 text-white select-none">
@@ -242,11 +183,11 @@ function App() {
         {status === 'success' && resumeData && (
           <div className="space-y-3 pt-1">
             <div className="flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 p-3 rounded-xl text-xs text-emerald-250">
-              <span>Resume Tailoring complete! Tailored bullets:</span>
+              <span>Resume tailoring complete! Review your tailored resume below.</span>
             </div>
 
             <div className="max-h-60 overflow-y-auto pr-1 space-y-3 scrollbar-thin scrollbar-thumb-white/20">
-              {renderBullets()}
+              <ResumePreview resume={resumeData} />
             </div>
           </div>
         )}

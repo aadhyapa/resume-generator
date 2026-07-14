@@ -1,3 +1,6 @@
+import type { GenerateResumeResponse } from './popup/types';
+import { isResume } from './popup/utils/resume';
+
 export default defineBackground(() => {
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'GENERATE_RESUME') {
@@ -29,7 +32,11 @@ export default defineBackground(() => {
             throw new Error('Failed to generate resume.');
           }
         })
-        .then((data) => {
+        .then((data: GenerateResumeResponse) => {
+          if (!isResume(data.resume)) {
+            throw new Error('Backend response did not include a valid resume.');
+          }
+
           browser.storage.local.set({
             generationState: {
               status: 'success',
