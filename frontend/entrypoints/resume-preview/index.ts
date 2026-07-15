@@ -77,12 +77,27 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (iframe.contentDocument && iframe.contentDocument.activeElement) {
           (iframe.contentDocument.activeElement as HTMLElement).blur();
         }
+        clearOverflowMarkers(iframe);
+        iframe.contentWindow.addEventListener(
+          "afterprint",
+          () => updateOverflowWarning(iframe),
+          { once: true },
+        );
         iframe.contentWindow.focus();
         iframe.contentWindow.print();
       }
     });
   }
 });
+
+function clearOverflowMarkers(iframe: HTMLIFrameElement) {
+  iframe.contentDocument
+    ?.querySelectorAll(".page.overflowing")
+    .forEach((page) => {
+      page.classList.remove("overflowing");
+    });
+  document.body.classList.remove("has-overflow");
+}
 
 function updateOverflowWarning(iframe: HTMLIFrameElement) {
   const page = iframe.contentDocument?.querySelector(".page");

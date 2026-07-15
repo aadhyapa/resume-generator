@@ -305,23 +305,16 @@ function getSectionSortOrder(section: { section_id: string }) {
 
 function renderSubSection(subSection: ResumeSubSection) {
   const metadata = getSubSectionMetadata(subSection);
-  const title =
-    metadata.name ||
-    metadata.title ||
-    metadata.school ||
-    metadata.company ||
-    metadata.organization ||
-    metadata.employer ||
-    metadata.project ||
-    prettifyIdentifier(subSection.sub_section_id);
+  const title = getSubSectionTitle(subSection, metadata);
+  const role = getSubSectionRole(metadata);
   const bullets = subSection.bullets ?? [];
 
   return `
       <div class="sub-section">
         <div class="sub-section-header">
-          <div class="sub-section-name">${escapeHtml(title)}</div>
+          <div class="sub-section-name">${title}</div>
           <div class="sub-section-date">${escapeHtml(metadata.date || metadata.dates || "")}</div>
-          <div class="sub-section-role">${escapeHtml(metadata.role || metadata.degree || metadata.position || metadata.major || "")}</div>
+          <div class="sub-section-role">${escapeHtml(role)}</div>
           <div class="sub-section-location">${escapeHtml(metadata.location || "")}</div>
         </div>
         ${
@@ -335,6 +328,39 @@ function renderSubSection(subSection: ResumeSubSection) {
             : ""
         }
       </div>`;
+}
+
+function getSubSectionTitle(
+  subSection: ResumeSubSection,
+  metadata: Record<string, string>,
+) {
+  const title =
+    metadata.name ||
+    metadata.title ||
+    metadata.school ||
+    metadata.company ||
+    metadata.organization ||
+    metadata.employer ||
+    metadata.project ||
+    prettifyIdentifier(subSection.sub_section_id);
+
+  if (metadata.tools && (metadata.name || metadata.project)) {
+    return `${escapeHtml(title)} | <span class="skill-used">${escapeHtml(metadata.tools)}</span>`;
+  }
+
+  return escapeHtml(title);
+}
+
+function getSubSectionRole(metadata: Record<string, string>) {
+  return (
+    metadata.company ||
+    metadata.employer ||
+    metadata.role ||
+    metadata.degree ||
+    metadata.position ||
+    metadata.major ||
+    ""
+  );
 }
 
 function renderContactItem(key: string, value: unknown) {
