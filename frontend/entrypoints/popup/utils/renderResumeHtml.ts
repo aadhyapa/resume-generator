@@ -235,8 +235,7 @@ function renderHeader(header?: ResumeHeader) {
     (key) => typeof header[key] === "string",
   );
   const name = nameKey ? escapeHtml(header[nameKey]) : "";
-  const contact = Object.entries(header)
-    .filter(([key]) => key !== nameKey)
+  const contact = getHeaderContactEntries(header, nameKey)
     .map(([key, value]) => renderContactItem(key, value))
     .filter(Boolean)
     .join(" | ");
@@ -246,6 +245,17 @@ function renderHeader(header?: ResumeHeader) {
       ${name ? `<h1 class="name">${name}</h1>` : ""}
       ${contact ? `<div class="contact">${contact}</div>` : ""}
     </div>`;
+}
+
+function getHeaderContactEntries(
+  header: Record<string, unknown>,
+  excludedKey?: string,
+): [string, unknown][] {
+  return Object.entries(header).flatMap(([key, value]) => {
+    if (key === excludedKey) return [];
+    if (isRecord(value)) return getHeaderContactEntries(value, undefined);
+    return [[key, value]];
+  });
 }
 
 function renderEducationSections(resume: Resume) {
@@ -390,8 +400,12 @@ function renderContactItem(key: string, value: unknown) {
     return `<a href="mailto:${escapeHtml(formatted)}">${escapedValue}</a>`;
   }
 
-  if (normalizedKey.includes("linkedin") || normalizedKey.includes("github")) {
-    return `<a href="${escapeHtml(formatExternalUrl(formatted))}">${escapedValue}</a>`;
+  if (normalizedKey.includes("linkedin")) {
+    return `<a href="${escapeHtml(formatExternalUrl(formatted))}">LinkedIn</a>`;
+  }
+
+  if (normalizedKey.includes("github")) {
+    return `<a href="${escapeHtml(formatExternalUrl(formatted))}">GitHub</a>`;
   }
 
   if (/^https?:\/\//i.test(formatted) || formatted.includes(".")) {
