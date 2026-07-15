@@ -56,6 +56,7 @@ const RESUME_1_STYLES = `
   }
 
   .page[contenteditable="true"] {
+    cursor: text;
     outline: none;
   }
 
@@ -514,7 +515,7 @@ function getSubSectionMetadata(subSection: ResumeSubSection) {
 }
 
 function renderBulletText(text: string, boldWords?: string[]) {
-  const escapedText = escapeHtml(text);
+  const escapedText = preserveBoldTags(escapeHtml(text));
   if (!boldWords || boldWords.length === 0) return escapedText;
 
   return boldWords.reduce((result, word) => {
@@ -522,6 +523,10 @@ function renderBulletText(text: string, boldWords?: string[]) {
     if (!escapedWord) return result;
     return result.replace(new RegExp(`(${escapedWord})`, "gi"), "<b>$1</b>");
   }, escapedText);
+}
+
+function preserveBoldTags(value: string) {
+  return value.replace(/&lt;b&gt;/gi, "<b>").replace(/&lt;\/b&gt;/gi, "</b>");
 }
 
 function escapeHtml(value: unknown) {

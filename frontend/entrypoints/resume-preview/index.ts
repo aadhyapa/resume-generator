@@ -92,12 +92,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function enablePreviewEditing(iframe: HTMLIFrameElement) {
-  const page = iframe.contentDocument?.querySelector(".page");
-  if (!(page instanceof HTMLElement)) return;
+  const doc = iframe.contentDocument;
+  const page = doc?.querySelector(".page");
+  if (!doc || !(page instanceof HTMLElement)) return;
 
+  doc.designMode = "on";
+  doc.body.contentEditable = "true";
   page.setAttribute("contenteditable", "true");
   page.setAttribute("spellcheck", "false");
+  page.tabIndex = 0;
   page.addEventListener("input", () => updateOverflowWarning(iframe));
+  doc.addEventListener("input", () => updateOverflowWarning(iframe));
 }
 
 function clearOverflowMarkers(iframe: HTMLIFrameElement) {
