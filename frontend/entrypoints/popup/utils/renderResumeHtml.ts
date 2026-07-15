@@ -1,4 +1,9 @@
-import type { Resume, ResumeHeader, ResumeSubSection } from "../types";
+import type {
+  Resume,
+  ResumeHeader,
+  ResumeSection,
+  ResumeSubSection,
+} from "../types";
 import {
   formatUnknownValue,
   getRenderableSections,
@@ -30,9 +35,19 @@ const RESUME_1_STYLES = `
     box-sizing: border-box;
   }
 
-  .container {
+  .page {
     width: 8.5in;
+    min-height: 11in;
     max-width: 100%;
+    padding: 0.5in;
+    background: white;
+    border: 1px solid #9ca3af;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+    box-sizing: border-box;
+  }
+
+  .container {
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -53,6 +68,13 @@ const RESUME_1_STYLES = `
 
   .contact {
     color: #4b5563;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .contact a {
+    color: inherit;
+    text-decoration: none;
   }
 
   .section {
@@ -132,10 +154,23 @@ const RESUME_1_STYLES = `
     font-weight: bold;
   }
 
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+
   @media print {
     body {
       padding: 0;
       background: white;
+    }
+
+    .page {
+      width: auto;
+      min-height: auto;
+      padding: 0;
+      border: none;
+      box-shadow: none;
     }
   }
 `;
@@ -150,10 +185,13 @@ export function renderResumeHtml(resume: Resume) {
   <style>${RESUME_1_STYLES}</style>
 </head>
 <body>
-  <div class="container">
-    ${renderHeader(resume.header)}
-    ${renderSections(resume)}
-    ${renderSkills(resume.skills)}
+  <div class="page">
+    <div class="container">
+      ${renderHeader(resume.header)}
+      ${renderSections(resume)}
+      ${renderSkills(resume.skills)}
+      ${renderLeadershipSections(resume)}
+    </div>
   </div>
 </body>
 </html>`;
@@ -168,9 +206,8 @@ function renderHeader(header?: ResumeHeader) {
   const name = nameKey ? escapeHtml(header[nameKey]) : "";
   const contact = Object.entries(header)
     .filter(([key]) => key !== nameKey)
-    .map(([, value]) => formatUnknownValue(value))
+    .map(([key, value]) => renderContactItem(key, value))
     .filter(Boolean)
-    .map(escapeHtml)
     .join(" | ");
 
   return `
@@ -182,17 +219,59 @@ function renderHeader(header?: ResumeHeader) {
 
 function renderSections(resume: Resume) {
   return getRenderableSections(resume)
-    .map((section) => {
-      const subSections = getSubSections(section)
-        .map(renderSubSection)
-        .join("");
-      return `
+    .filter(
+      (section) => !isSkillsSection(section) && !isLeadershipSection(section),
+    )
+    .sort(compareResumeSections)
+    .map(renderSection)
+    .join("");
+}
+
+function renderLeadershipSections(resume: Resume) {
+  return getRenderableSections(resume)
+    .filter(isLeadershipSection)
+    .map(renderSection)
+    .join("");
+}
+
+function renderSection(section: ResumeSection) {
+  const subSections = getSubSections(section).map(renderSubSection).join("");
+  return `
     <div class="section">
       <div class="section-name">${escapeHtml(getSectionTitle(section))}</div>
       ${subSections}
     </div>`;
-    })
-    .join("");
+}
+
+function getSectionId(section: { section_id: string }) {
+  return section.section_id.toLowerCase();
+}
+
+function isSkillsSection(section: { section_id: string }) {
+  return (
+    getSectionId(section) === "sec_skills" ||
+    getSectionId(section).includes("skill")
+  );
+}
+
+function isLeadershipSection(section: { section_id: string }) {
+  return getSectionId(section).includes("leadership");
+}
+
+function compareResumeSections(
+  left: { section_id: string },
+  right: { section_id: string },
+) {
+  return getSectionSortOrder(left) - getSectionSortOrder(right);
+}
+
+function getSectionSortOrder(section: { section_id: string }) {
+  const sectionId = getSectionId(section);
+  if (sectionId.includes("education")) return 10;
+  if (sectionId.includes("experience")) return 20;
+  if (sectionId.includes("project")) return 30;
+  if (sectionId.includes("leadership")) return 90;
+  return 40;
 }
 
 function renderSubSection(subSection: ResumeSubSection) {
@@ -229,6 +308,28 @@ function renderSubSection(subSection: ResumeSubSection) {
       </div>`;
 }
 
+function renderContactItem(key: string, value: unknown) {
+  const formatted = formatUnknownValue(value);
+  if (!formatted) return "";
+
+  const normalizedKey = key.toLowerCase();
+  const label = prettifyIdentifier(key);
+  const escapedLabel = escapeHtml(label);
+  const escapedValue = escapeHtml(formatted);
+
+  if (normalizedKey.includes("linkedin") || normalizedKey.includes("github")) {
+    const href = formatExternalUrl(formatted);
+    return `${escapedLabel}: <a href="${escapeHtml(href)}">${escapedValue}</a>`;
+  }
+
+  return `${escapedLabel}: ${escapedValue}`;
+}
+
+function formatExternalUrl(value: string) {
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://${value}`;
+}
+
 function renderSkills(skills: Resume["skills"]) {
   if (!skills) return "";
 
@@ -240,6 +341,7 @@ function renderSkills(skills: Resume["skills"]) {
   if (!isRecord(skills)) return "";
 
   const groups = Object.entries(skills)
+    .filter(([key]) => key.toLowerCase() !== "section_id")
     .map(
       ([key, value]) =>
         [prettifyIdentifier(key), formatUnknownValue(value)] as const,
