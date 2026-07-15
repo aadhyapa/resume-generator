@@ -180,7 +180,7 @@ const RESUME_1_STYLES = `
 
   @page {
     size: letter;
-    margin: 0.5in;
+    margin: 0;
   }
 
   @media print {
@@ -192,7 +192,7 @@ const RESUME_1_STYLES = `
     .page {
       width: auto;
       height: auto;
-      padding: 0;
+      padding: 0.5in;
       overflow: visible;
       border: none;
       box-shadow: none;
@@ -368,16 +368,21 @@ function renderContactItem(key: string, value: unknown) {
   if (!formatted) return "";
 
   const normalizedKey = key.toLowerCase();
-  const label = prettifyIdentifier(key);
-  const escapedLabel = escapeHtml(label);
   const escapedValue = escapeHtml(formatted);
 
-  if (normalizedKey.includes("linkedin") || normalizedKey.includes("github")) {
-    const href = formatExternalUrl(formatted);
-    return `${escapedLabel}: <a href="${escapeHtml(href)}">${escapedValue}</a>`;
+  if (normalizedKey.includes("email") || formatted.includes("@")) {
+    return `<a href="mailto:${escapeHtml(formatted)}">${escapedValue}</a>`;
   }
 
-  return `${escapedLabel}: ${escapedValue}`;
+  if (normalizedKey.includes("linkedin") || normalizedKey.includes("github")) {
+    return `<a href="${escapeHtml(formatExternalUrl(formatted))}">${escapedValue}</a>`;
+  }
+
+  if (/^https?:\/\//i.test(formatted) || formatted.includes(".")) {
+    return `<a href="${escapeHtml(formatExternalUrl(formatted))}">${escapedValue}</a>`;
+  }
+
+  return escapedValue;
 }
 
 function formatExternalUrl(value: string) {
