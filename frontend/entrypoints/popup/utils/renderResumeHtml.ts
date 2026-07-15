@@ -55,6 +55,14 @@ const RESUME_1_STYLES = `
     gap: 15px;
   }
 
+  .page[contenteditable="true"] {
+    outline: none;
+  }
+
+  .page[contenteditable="true"]:focus {
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18), 0 0 0 2px rgba(236, 72, 153, 0.35);
+  }
+
   .page.overflowing {
     border-color: #ef4444;
     box-shadow: 0 8px 24px rgba(239, 68, 68, 0.24);
@@ -196,6 +204,10 @@ const RESUME_1_STYLES = `
       padding: 0.5in;
       overflow: visible;
       border: none;
+      box-shadow: none;
+    }
+
+    .page[contenteditable="true"]:focus {
       box-shadow: none;
     }
 

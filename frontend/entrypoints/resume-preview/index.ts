@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const iframe = document.getElementById("previewFrame") as HTMLIFrameElement;
   if (iframe) {
     iframe.addEventListener("load", () => {
+      enablePreviewEditing(iframe);
       updateOverflowWarning(iframe);
       window.setTimeout(() => updateOverflowWarning(iframe), 250);
     });
@@ -89,6 +90,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 });
+
+function enablePreviewEditing(iframe: HTMLIFrameElement) {
+  const page = iframe.contentDocument?.querySelector(".page");
+  if (!(page instanceof HTMLElement)) return;
+
+  page.setAttribute("contenteditable", "true");
+  page.setAttribute("spellcheck", "false");
+  page.addEventListener("input", () => updateOverflowWarning(iframe));
+}
 
 function clearOverflowMarkers(iframe: HTMLIFrameElement) {
   iframe.contentDocument
