@@ -30,6 +30,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       editableElements.forEach((el) => {
         el.removeAttribute("contenteditable");
       });
+      docClone.querySelectorAll("[spellcheck]").forEach((el) => {
+        el.removeAttribute("spellcheck");
+      });
       docClone.querySelectorAll(".page.overflowing").forEach((page) => {
         page.classList.remove("overflowing");
       });
@@ -97,12 +100,18 @@ function enablePreviewEditing(iframe: HTMLIFrameElement) {
   if (!doc || !(page instanceof HTMLElement)) return;
 
   doc.designMode = "on";
-  doc.body.contentEditable = "true";
+  doc.documentElement.setAttribute("contenteditable", "true");
+  doc.body.setAttribute("contenteditable", "true");
+  doc.body.setAttribute("spellcheck", "false");
   page.setAttribute("contenteditable", "true");
   page.setAttribute("spellcheck", "false");
   page.tabIndex = 0;
+  page.focus();
   page.addEventListener("input", () => updateOverflowWarning(iframe));
   doc.addEventListener("input", () => updateOverflowWarning(iframe));
+  doc.addEventListener("click", (event) => {
+    if ((event.target as Element | null)?.closest("a")) event.preventDefault();
+  });
 }
 
 function clearOverflowMarkers(iframe: HTMLIFrameElement) {

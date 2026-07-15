@@ -19,6 +19,7 @@ const SUB_SECTION_RESERVED_KEYS = new Set([
   "section_id",
   "bullets",
 ]);
+const EDITABLE_ATTRIBUTES = 'contenteditable="true" spellcheck="false"';
 
 // CSS mirrors frontend/assets/Templates/resume1.html so the popup preview matches the exported resume template.
 const RESUME_1_STYLES = `
@@ -227,8 +228,8 @@ export function renderResumeHtml(resume: Resume) {
   <title>Tailored Resume Preview</title>
   <style>${RESUME_1_STYLES}</style>
 </head>
-<body>
-  <div class="page">
+<body ${EDITABLE_ATTRIBUTES}>
+  <div class="page" ${EDITABLE_ATTRIBUTES}>
     <div class="container">
       ${renderHeader(resume.header)}
       ${renderEducationSections(resume)}
@@ -256,8 +257,8 @@ function renderHeader(header?: ResumeHeader) {
 
   return `
     <div class="section header">
-      ${name ? `<h1 class="name">${name}</h1>` : ""}
-      ${contact ? `<div class="contact">${contact}</div>` : ""}
+      ${name ? `<h1 class="name" ${EDITABLE_ATTRIBUTES}>${name}</h1>` : ""}
+      ${contact ? `<div class="contact" ${EDITABLE_ATTRIBUTES}>${contact}</div>` : ""}
     </div>`;
 }
 
@@ -316,7 +317,7 @@ function renderSection(section: ResumeSection) {
   const subSections = getSubSections(section).map(renderSubSection).join("");
   return `
     <div class="section">
-      <div class="section-name">${escapeHtml(getSectionTitle(section))}</div>
+      <div class="section-name" ${EDITABLE_ATTRIBUTES}>${escapeHtml(getSectionTitle(section))}</div>
       ${subSections}
     </div>`;
 }
@@ -365,17 +366,17 @@ function renderSubSection(subSection: ResumeSubSection) {
   return `
       <div class="sub-section">
         <div class="sub-section-header">
-          <div class="sub-section-name">${title}</div>
-          <div class="sub-section-date">${escapeHtml(metadata.date || metadata.dates || "")}</div>
-          <div class="sub-section-role">${escapeHtml(role)}</div>
-          <div class="sub-section-location">${escapeHtml(metadata.location || "")}</div>
+          <div class="sub-section-name" ${EDITABLE_ATTRIBUTES}>${title}</div>
+          <div class="sub-section-date" ${EDITABLE_ATTRIBUTES}>${escapeHtml(metadata.date || metadata.dates || "")}</div>
+          <div class="sub-section-role" ${EDITABLE_ATTRIBUTES}>${escapeHtml(role)}</div>
+          <div class="sub-section-location" ${EDITABLE_ATTRIBUTES}>${escapeHtml(metadata.location || "")}</div>
         </div>
         ${
           bullets.length > 0
             ? `
         <div class="sub-section-description">
           <ul>
-            ${bullets.map((bullet) => `<li>${renderBulletText(bullet.text, bullet.bold_words)}</li>`).join("\n            ")}
+            ${bullets.map((bullet) => `<li ${EDITABLE_ATTRIBUTES}>${renderBulletText(bullet.text, bullet.bold_words)}</li>`).join("\n            ")}
           </ul>
         </div>`
             : ""
@@ -493,8 +494,8 @@ function renderSkillSection(
         ${groups
           .map(
             ([category, value]) => `
-        <span class="skill-category sub-section-description">${escapeHtml(category)}:</span>
-        <span class="skill-item sub-section-description">${escapeHtml(value ?? "")}</span>
+        <span class="skill-category sub-section-description" ${EDITABLE_ATTRIBUTES}>${escapeHtml(category)}:</span>
+        <span class="skill-item sub-section-description" ${EDITABLE_ATTRIBUTES}>${escapeHtml(value ?? "")}</span>
         <br />`,
           )
           .join("")}
