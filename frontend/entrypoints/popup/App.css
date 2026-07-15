@@ -34,7 +34,6 @@
 
 /* Custom glow/pulse for high fidelity styling */
 @keyframes pulse-glow {
-
   0%,
   100% {
     box-shadow: 0 0 10px rgba(236, 72, 153, 0.2);
@@ -63,4 +62,9 @@
 .clear-button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.preview-button {
+  font-size: 0.75rem;
+  font-weight: 700;
 }
