@@ -98,7 +98,8 @@ const RESUME_1_STYLES = `
 
   .contact a {
     color: inherit;
-    text-decoration: none;
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 
   .section {
@@ -217,8 +218,9 @@ export function renderResumeHtml(resume: Resume) {
   <div class="page">
     <div class="container">
       ${renderHeader(resume.header)}
-      ${renderSections(resume)}
+      ${renderEducationSections(resume)}
       ${renderSkills(resume.skills)}
+      ${renderSections(resume)}
       ${renderLeadershipSections(resume)}
     </div>
   </div>
@@ -246,10 +248,20 @@ function renderHeader(header?: ResumeHeader) {
     </div>`;
 }
 
+function renderEducationSections(resume: Resume) {
+  return getRenderableSections(resume)
+    .filter(isEducationSection)
+    .map(renderSection)
+    .join("");
+}
+
 function renderSections(resume: Resume) {
   return getRenderableSections(resume)
     .filter(
-      (section) => !isSkillsSection(section) && !isLeadershipSection(section),
+      (section) =>
+        !isEducationSection(section) &&
+        !isSkillsSection(section) &&
+        !isLeadershipSection(section),
     )
     .sort(compareResumeSections)
     .map(renderSection)
@@ -274,6 +286,10 @@ function renderSection(section: ResumeSection) {
 
 function getSectionId(section: { section_id: string }) {
   return section.section_id.toLowerCase();
+}
+
+function isEducationSection(section: { section_id: string }) {
+  return getSectionId(section).includes("education");
 }
 
 function isSkillsSection(section: { section_id: string }) {
