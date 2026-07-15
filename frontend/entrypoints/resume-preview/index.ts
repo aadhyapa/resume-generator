@@ -1,5 +1,5 @@
-document.addEventListener('DOMContentLoaded', async () => {
-  const result = await browser.storage.local.get('currentResumeHtml') as any;
+document.addEventListener("DOMContentLoaded", async () => {
+  const result = (await browser.storage.local.get("currentResumeHtml")) as any;
   const html = result?.currentResumeHtml as string;
 
   if (!html) {
@@ -12,8 +12,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  const iframe = document.getElementById('previewFrame') as HTMLIFrameElement;
+  const iframe = document.getElementById("previewFrame") as HTMLIFrameElement;
   if (iframe) {
+    iframe.addEventListener("load", () => {
+      updateOverflowWarning(iframe);
+      window.setTimeout(() => updateOverflowWarning(iframe), 250);
+    });
     iframe.srcdoc = html;
   }
 
@@ -21,41 +25,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (iframe && iframe.contentDocument) {
       // Clone document to strip editing markers before copying or downloading
       const docClone = iframe.contentDocument.cloneNode(true) as Document;
-      const editableElements = docClone.querySelectorAll('[contenteditable]');
+      const editableElements = docClone.querySelectorAll("[contenteditable]");
       editableElements.forEach((el) => {
-        el.removeAttribute('contenteditable');
+        el.removeAttribute("contenteditable");
       });
-      return '<!DOCTYPE html>\n' + docClone.documentElement.outerHTML;
+      docClone.querySelectorAll(".page.overflowing").forEach((page) => {
+        page.classList.remove("overflowing");
+      });
+      return "<!DOCTYPE html>\n" + docClone.documentElement.outerHTML;
     }
     return html;
   };
 
-  const copyBtn = document.getElementById('copyBtn');
+  const copyBtn = document.getElementById("copyBtn");
   if (copyBtn) {
-    copyBtn.addEventListener('click', () => {
+    copyBtn.addEventListener("click", () => {
       const activeHtml = getEditedHtml();
       navigator.clipboard.writeText(activeHtml).then(() => {
-        copyBtn.textContent = 'Copied!';
-        copyBtn.style.background = '#10b981';
-        copyBtn.style.color = '#fff';
+        copyBtn.textContent = "Copied!";
+        copyBtn.style.background = "#10b981";
+        copyBtn.style.color = "#fff";
         setTimeout(() => {
-          copyBtn.textContent = 'Copy HTML';
-          copyBtn.style.background = '';
-          copyBtn.style.color = '';
+          copyBtn.textContent = "Copy HTML";
+          copyBtn.style.background = "";
+          copyBtn.style.color = "";
         }, 2000);
       });
     });
   }
 
-  const downloadBtn = document.getElementById('downloadBtn');
+  const downloadBtn = document.getElementById("downloadBtn");
   if (downloadBtn) {
-    downloadBtn.addEventListener('click', () => {
+    downloadBtn.addEventListener("click", () => {
       const activeHtml = getEditedHtml();
-      const blob = new Blob([activeHtml], { type: 'text/html' });
+      const blob = new Blob([activeHtml], { type: "text/html" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = 'tailored-resume.html';
+      a.download = "tailored-resume.html";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -63,9 +70,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  const printBtn = document.getElementById('printBtn');
+  const printBtn = document.getElementById("printBtn");
   if (printBtn) {
-    printBtn.addEventListener('click', () => {
+    printBtn.addEventListener("click", () => {
       if (iframe && iframe.contentWindow) {
         if (iframe.contentDocument && iframe.contentDocument.activeElement) {
           (iframe.contentDocument.activeElement as HTMLElement).blur();
@@ -76,3 +83,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 });
+
+function updateOverflowWarning(iframe: HTMLIFrameElement) {
+  const page = iframe.contentDocument?.querySelector(".page");
+  if (!(page instanceof HTMLElement)) return;
+
+  const hasOverflow = page.scrollHeight > page.clientHeight + 1;
+  page.classList.toggle("overflowing", hasOverflow);
+  document.body.classList.toggle("has-overflow", hasOverflow);
+}

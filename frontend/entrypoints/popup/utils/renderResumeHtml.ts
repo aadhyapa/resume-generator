@@ -37,9 +37,11 @@ const RESUME_1_STYLES = `
 
   .page {
     width: 8.5in;
-    min-height: 11in;
+    height: 11in;
     max-width: 100%;
     padding: 0.5in;
+    position: relative;
+    overflow: visible;
     background: white;
     border: 1px solid #9ca3af;
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
@@ -51,6 +53,28 @@ const RESUME_1_STYLES = `
     display: flex;
     flex-direction: column;
     gap: 15px;
+  }
+
+  .page.overflowing {
+    border-color: #ef4444;
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.24);
+  }
+
+  .page.overflowing::after {
+    content: "PDF page 1 ends here — overflowing content will continue on page 2";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-top: 2px dashed #ef4444;
+    color: #b91c1c;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    padding-top: 4px;
+    text-align: center;
+    transform: translateY(100%);
   }
 
   .header {
@@ -167,10 +191,15 @@ const RESUME_1_STYLES = `
 
     .page {
       width: auto;
-      min-height: auto;
+      height: auto;
       padding: 0;
+      overflow: visible;
       border: none;
       box-shadow: none;
+    }
+
+    .page.overflowing::after {
+      content: none;
     }
   }
 `;
