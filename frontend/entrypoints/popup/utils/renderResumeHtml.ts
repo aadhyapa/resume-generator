@@ -235,10 +235,11 @@ function renderHeader(header?: ResumeHeader) {
     (key) => typeof header[key] === "string",
   );
   const name = nameKey ? escapeHtml(header[nameKey]) : "";
-  const contact = getHeaderContactEntries(header, nameKey)
-    .map(([key, value]) => renderContactItem(key, value))
-    .filter(Boolean)
-    .join(" | ");
+  const contact = dedupeContactItems(
+    getHeaderContactEntries(header, nameKey)
+      .map(([key, value]) => renderContactItem(key, value))
+      .filter(Boolean),
+  ).join(" | ");
 
   return `
     <div class="section header">
@@ -254,8 +255,21 @@ function getHeaderContactEntries(
   return Object.entries(header).flatMap(([key, value]) => {
     if (key === excludedKey) return [];
     if (isRecord(value)) return getHeaderContactEntries(value, undefined);
-    return [[key, value]];
+    if (Array.isArray(value))
+      return value.map((item) => [key, item] as [string, unknown]);
+    if (typeof value === "string" && value.includes("|")) {
+      return value
+        .split("|")
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => [key, item] as [string, unknown]);
+    }
+    return [[key, value] as [string, unknown]];
   });
+}
+
+function dedupeContactItems(items: string[]) {
+  return Array.from(new Set(items));
 }
 
 function renderEducationSections(resume: Resume) {
@@ -400,11 +414,11 @@ function renderContactItem(key: string, value: unknown) {
     return `<a href="mailto:${escapeHtml(formatted)}">${escapedValue}</a>`;
   }
 
-  if (normalizedKey.includes("linkedin")) {
+  if (isLinkedInContact(normalizedKey, formatted)) {
     return `<a href="${escapeHtml(formatExternalUrl(formatted))}">LinkedIn</a>`;
   }
 
-  if (normalizedKey.includes("github")) {
+  if (isGitHubContact(normalizedKey, formatted)) {
     return `<a href="${escapeHtml(formatExternalUrl(formatted))}">GitHub</a>`;
   }
 
@@ -415,9 +429,22 @@ function renderContactItem(key: string, value: unknown) {
   return escapedValue;
 }
 
+function isLinkedInContact(key: string, value: string) {
+  const normalizedValue = value.toLowerCase();
+  return key.includes("linkedin") || normalizedValue.includes("linkedin.com");
+}
+
+function isGitHubContact(key: string, value: string) {
+  const normalizedValue = value.toLowerCase();
+  return key.includes("github") || normalizedValue.includes("github.com");
+}
+
 function formatExternalUrl(value: string) {
-  if (/^https?:\/\//i.test(value)) return value;
-  return `https://${value}`;
+  const trimmedValue = value.trim();
+  const url = /^https?:\/\//i.test(trimmedValue)
+    ? trimmedValue
+    : `https://${trimmedValue}`;
+  return url.replace(/\/+$/, "");
 }
 
 function renderSkills(skills: Resume["skills"]) {
