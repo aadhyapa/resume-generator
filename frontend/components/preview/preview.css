@@ -1,0 +1,132 @@
+body {
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    justify-content: flex-start;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f6f6f3;
+    font-family: 'Latin Modern Roman', Garamond, 'Times New Roman', Times, serif;
+    font-size: 0.8rem;
+    box-sizing: border-box;
+}
+.container {
+    width: 8.5in;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.header {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.name {
+    margin: 0 0 10px 0;
+    font-variant-caps: small-caps;
+    font-size: 3rem;
+}
+.contact {
+    color: #4b5563;
+}
+.section {
+    width: 100%;
+}
+.section-name {
+    border-bottom: 0.5px solid #4b5563;
+    font-weight: bold;
+    font-variant-caps: small-caps;
+    font-size: 1.2rem;
+}
+.sub-section {
+    width: 100%;
+    margin-top: 10px;
+}
+.sub-section-header {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, auto);
+    justify-content: space-between;
+}
+.sub-section-name {
+    grid-row-start: 1;
+    grid-row-end: 2;
+    grid-column-start: 1;
+    grid-column-end: 2;
+    font-weight: bold;
+}
+.sub-section-date {
+    grid-row-start: 1;
+    grid-row-end: 2;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    text-align: right;
+    font-weight: bold;
+}
+.sub-section-role {
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 1;
+    grid-column-end: 2;
+    font-style: italic;
+}
+.sub-section-location {
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    font-style: italic;
+    text-align: right;
+}
+.sub-section-description {
+    margin-top: 0px;
+    margin-left: 5px;
+}
+.sub-section-description ul {
+    margin-top: 2px;
+    margin-bottom: 0px;
+    padding-left: 20px;
+    font-weight: 300;
+}
+.skill-used {
+    font-style: italic;
+    font-weight: normal;
+}
+.skill-category {
+    font-weight: bold;
+}
+[contenteditable="true"] {
+    outline: none;
+    transition: background 0.2s;
+}
+[contenteditable="true"]:hover {
+    background: rgba(236, 72, 153, 0.03);
+    cursor: text;
+}
+[contenteditable="true"]:focus {
+    outline: 1px dashed #ec4899;
+    background: rgba(236, 72, 153, 0.05);
+    border-radius: 2px;
+}
+@media print {
+    @page {
+        size: letter;
+        margin: 0;
+    }
+    body {
+        background-color: #fff !important;
+        padding: 0.3in !important;
+        margin: 0 !important;
+    }
+    .container {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    [contenteditable="true"] {
+        background: none !important;
+        outline: none !important;
+    }
+}

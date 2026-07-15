@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Template</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: flex-start;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f6f6f3;
+            /* Optional: light background */
+            font-family: 'Latin Modern Roman', Garamond, 'Times New Roman', Times, serif;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 8.5in;
+            max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .header {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .name {
+            margin: 0 0 10px 0;
+            font-variant-caps: small-caps;
+            font-size: 3rem;
+        }
+
+        .contact {
+            color: #4b5563;
+        }
+
+        .section {
+            width: 100%;
+        }
+
+        .section-name {
+            border-bottom: 1px solid #4b5563;
+            font-weight: bold;
+            font-variant-caps: small-caps;
+            font-size: 1.5rem;
+        }
+
+        .sub-section {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .sub-section-header {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, auto);
+            justify-content: space-between;
+        }
+
+        .sub-section-name {
+            grid-row-start: 1;
+            grid-row-end: 2;
+            grid-column-start: 1;
+            grid-column-end: 2;
+            font-weight: bold;
+        }
+
+        .sub-section-date {
+            grid-row-start: 1;
+            grid-row-end: 2;
+            grid-column-start: 2;
+            grid-column-end: 3;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .sub-section-role {
+            grid-row-start: 2;
+            grid-row-end: 3;
+            grid-column-start: 1;
+            grid-column-end: 2;
+            font-style: italic;
+        }
+
+        .sub-section-location {
+            grid-row-start: 2;
+            grid-row-end: 3;
+            grid-column-start: 2;
+            grid-column-end: 3;
+            font-style: italic;
+            text-align: right;
+        }
+
+        .sub-section-description {
+            margin-top: 0px;
+            margin-left: 5px;
+        }
+
+        .sub-section-description ul {
+            margin-top: 2px;
+            margin-bottom: 0px;
+            padding-left: 20px;
+        }
+
+        .skill-used {
+            font-style: italic;
+            font-weight: normal;
+        }
+
+        .skill-category {
+            font-weight: bold;
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="section header">
+            <h1 class="name">Aadhya Pandillapally</h1>
+            <div class="contact">000-000-0000 | aadhyapa@gmail.com | linkedin.com/in/aadhyapa|github.com/aadhyapa</div>
+        </div>
+        <div class="section">
+            <div class="section-name">
+                Education
+            </div>
+            <div class="sub-section">
+                <div class="sub-section-header">
+                    <div class="sub-section-name">Michigan State University</div>
+                    <div class="sub-section-date">Aug 2023 - May 2027</div>
+                    <div class="sub-section-role">Bachelor of Science in Computer Science, 3.98/4.0</div>
+                    <div class="sub-section-location">East Lansing, MI</div>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-name">
+                Experience
+            </div>
+            <div class="sub-section">
+                <div class="sub-section-header">
+                    <div class="sub-section-name">Software Development Engineer Intern</div>
+                    <div class="sub-section-date">May 2025 - Aug 2025</div>
+                    <div class="sub-section-role">Amazon</div>
+                    <div class="sub-section-location">Seattle, WA</div>
+                </div>
+                <div class="sub-section-description">
+                    <ul>
+                        <li>
+                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor
+                            sit
+                            amet
+                            consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur
+                            adipisicing
+                            elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
+                            quod.
+                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.
+                        </li>
+                        <li>
+                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor
+                            sit
+                            amet
+                            consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur
+                            adipisicing
+                            elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
+                            quod.
+                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-name">
+                Projects
+            </div>
+            <div class="sub-section">
+                <div class="sub-section-header">
+                    <div class="sub-section-name">Resume Customizer | <span class="skill-used">React, Next.js, Tailwind
+                            CSS</span></div>
+                    <div class="sub-section-date"></div>
+                </div>
+                <div class="sub-section-description">
+                    <ul>
+                        <li>
+                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor
+                            sit
+                            amet
+                            consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur
+                            adipisicing
+                            elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
+                            quod.
+                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.
+                        </li>
+                        <li>
+                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor
+                            sit
+                            amet
+                            consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur
+                            adipisicing
+                            elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
+                            quod.
+                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="section">
+                <div class="section-name">
+                    Leadership & Activities
+                </div>
+                <div class="sub-section">
+                    <div class="sub-section-header">
+                        <div class="sub-section-name">Imagine Software Club at MSU</div>
+                        <div class="sub-section-date">May 2025 - Aug 2025</div>
+                        <div class="sub-section-role">Educational Director</div>
+                        <div class="sub-section-location">East Lansing, MI</div>
+                    </div>
+                    <div class="sub-section-description">
+                        <ul>
+                            <li>
+                                Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod. Lorem ipsum
+                                dolor
+                                sit
+                                amet
+                                consectetur adipisicing elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur
+                                adipisicing
+                                elit. Quisquam, quod. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
+                                quod.
+                                Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="section">
+                <div class="section-name">
+                    Technical Skills
+                </div>
+                <div class="sub-section">
+                    <span class="skill-category sub-section-description">Programming Languages:</span>
+                    <span class="skill-item sub-section-description">Python, C++, Java, JavaScript, TypeScript</span>
+                    <br />
+                    <span class="skill-category sub-section-description">Frameworks:</span>
+                    <span class="skill-item sub-section-description">React, Next.js, Tailwind CSS</span>
+                </div>
+</body>
+
+</html>
