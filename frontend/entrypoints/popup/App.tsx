@@ -191,6 +191,16 @@ if (state.resumeData !== undefined) {
             <div className="max-h-60 overflow-y-auto pr-1 space-y-3 scrollbar-thin scrollbar-thumb-white/20">
               <ResumePreview resume={resumeData} />
             </div>
+
+            <div className="flex justify-center pt-1">
+              <Button
+                type="button"
+                onClick={handleClear}
+                className="exit-button"
+              >
+                Exit
+              </Button>
+            </div>
           </div>
         )}
       </div>
