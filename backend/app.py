@@ -80,7 +80,7 @@ async def generate_resume(job_description: str = Body(..., embed=True)):
         logger.info("Running matchmaker")
         scored_resume_bullets = matchmaker(requirement_embeddings, responsibility_embeddings, bonus_embeddings, soft_skills_embedding, resume_bullets)
         logger.info("Running selector")
-        selected_bullets = selector(scored_resume_bullets, 20, 4)
+        selected_bullets = selector(scored_resume_bullets, 10, 4)
 
         # Keep a clean deep copy of original bullets for comparison and fallback
         original_bullets = copy.deepcopy(selected_bullets)

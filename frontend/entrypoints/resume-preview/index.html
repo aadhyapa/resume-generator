@@ -1,78 +1,94 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Tailored Resume Preview</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
-    #controls {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 24px;
-      background: #18181b;
-      border-bottom: 1px solid #27272a;
-    }
-    .title {
-      margin-right: auto;
-      font-size: 14px;
-      font-weight: 700;
-      background: linear-gradient(to right, #f472b6, #c084fc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    button {
-      padding: 8px 16px;
-      font-size: 12px;
-      font-weight: 600;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-primary {
-      background: #ec4899;
-      color: white;
-    }
-    .btn-primary:hover {
-      background: #db2777;
-    }
-    .btn-secondary {
-      background: #27272a;
-      color: #e4e4e7;
-      border: 1px solid #3f3f46;
-    }
-    .btn-secondary:hover {
-      background: #3f3f46;
-      color: white;
-    }
-    #previewFrame {
-      flex: 1;
-      width: 100%;
-      border: none;
-      background: #f6f6f3;
-    }
-  </style>
-</head>
-<body>
-  <div id="controls">
-    <div class="title">Rezmaker Assembled Resume Preview</div>
-    <button id="copyBtn" class="btn-secondary">Copy HTML</button>
-    <button id="downloadBtn" class="btn-secondary">Download HTML</button>
-    <button id="printBtn" class="btn-primary">Print to PDF</button>
-  </div>
-  <iframe id="previewFrame"></iframe>
-  <script type="module" src="./index.ts"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tailored Resume Preview</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        background: #111;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
+      #controls {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 24px;
+        background: #18181b;
+        border-bottom: 1px solid #27272a;
+      }
+      .title {
+        margin-right: auto;
+        font-size: 14px;
+        font-weight: 700;
+        background: linear-gradient(to right, #f472b6, #c084fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      #overflowWarning {
+        display: none;
+        padding: 6px 10px;
+        border: 1px solid rgba(248, 113, 113, 0.55);
+        border-radius: 999px;
+        background: rgba(127, 29, 29, 0.45);
+        color: #fecaca;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      body.has-overflow #overflowWarning {
+        display: block;
+      }
+      button {
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background: #ec4899;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #db2777;
+      }
+      .btn-secondary {
+        background: #27272a;
+        color: #e4e4e7;
+        border: 1px solid #3f3f46;
+      }
+      .btn-secondary:hover {
+        background: #3f3f46;
+        color: white;
+      }
+      #previewFrame {
+        flex: 1;
+        width: 100%;
+        border: none;
+        background: #f6f6f3;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="controls">
+      <div class="title">Rezmaker Assembled Resume Preview</div>
+      <div id="overflowWarning">Overflows one PDF page</div>
+      <button id="copyBtn" class="btn-secondary">Copy HTML</button>
+      <button id="downloadBtn" class="btn-secondary">Download HTML</button>
+      <button id="printBtn" class="btn-primary">Print to PDF</button>
+    </div>
+    <iframe id="previewFrame"></iframe>
+    <script type="module" src="./index.ts"></script>
+  </body>
 </html>
