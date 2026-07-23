@@ -157,7 +157,7 @@ function App() {
                 Scraping...
               </>
             ) : (
-              "Tailor"
+              "Scrape"
             )}
           </Button>
         </div>
@@ -175,67 +175,67 @@ function App() {
           status === "success" ||
           status === "error" ||
           jobDescription) && (
-          <div className="space-y-3">
-            <div className="flex justify-between items-center text-[11px] text-white/90 px-1 font-semibold">
-              <span></span>
-              <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-normal">
-                {jobDescription.length} chars
-              </span>
-            </div>
-            <textarea
-              value={jobDescription}
-              onChange={(e) => setJobDescription(e.target.value)}
-              placeholder="Paste or edit the job description here..."
-              disabled={status === "generating"}
-              className="w-full h-32 bg-black/30 text-white/95 placeholder-white/50 border border-white/25 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all duration-300 resize-none font-sans leading-relaxed scrollbar-thin scrollbar-thumb-white/20"
-            />
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-[11px] text-white/90 px-1 font-semibold">
+                <span></span>
+                <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-normal">
+                  {jobDescription.length} chars
+                </span>
+              </div>
+              <textarea
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+                placeholder="Paste or edit the job description here..."
+                disabled={status === "generating"}
+                className="w-full h-32 bg-black/30 text-white/95 placeholder-white/50 border border-white/25 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all duration-300 resize-none font-sans leading-relaxed scrollbar-thin scrollbar-thumb-white/20"
+              />
 
-            {/* Clear / Generate Actions */}
-            <div className="resume-actions">
-              <Button
-                type="button"
-                onClick={handleClear}
-                disabled={status === "generating" || !jobDescription}
-                aria-label="Clear job description"
-                className="clear-button"
-              >
-                Clear
-              </Button>
-              <Button
-                onClick={handleGenerate}
-                disabled={status === "generating" || !jobDescription.trim()}
-                className="flex justify-center"
-              >
-                {status === "generating" ? (
-                  <>
-                    <svg
-                      className="animate-spin h-4 w-4 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Tailoring Resume...
-                  </>
-                ) : (
-                  "Generate Tailored Resume"
-                )}
-              </Button>
+              {/* Clear / Generate Actions */}
+              <div className="resume-actions">
+                <Button
+                  type="button"
+                  onClick={handleClear}
+                  disabled={status === "generating" || !jobDescription}
+                  aria-label="Clear job description"
+                  className="clear-button"
+                >
+                  Clear
+                </Button>
+                <Button
+                  onClick={handleGenerate}
+                  disabled={status === "generating" || !jobDescription.trim()}
+                  className="flex justify-center"
+                >
+                  {status === "generating" ? (
+                    <>
+                      <svg
+                        className="animate-spin h-4 w-4 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Tailoring Resume...
+                    </>
+                  ) : (
+                    "Tailor"
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Success / Tailored Resume Section */}
         {status === "success" && resumeData && (
@@ -252,7 +252,14 @@ function App() {
                 onClick={handleOpenHtmlPreview}
                 className="preview-button"
               >
-                Preview HTML / Export PDF
+                Preview
+              </Button>
+              <Button
+                type="button"
+                onClick={handleClear}
+                className="exit-button"
+              >
+                Exit
               </Button>
             </div>
 
