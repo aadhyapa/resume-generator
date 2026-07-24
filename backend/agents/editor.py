@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from google import genai
+import anthropic
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ dotenv_path = os.path.join(backend_dir, ".env")
 load_dotenv(dotenv_path)
 
 # Initialize Gemini Client
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
     """
@@ -62,13 +62,15 @@ def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
 
     # 4. Call LLM
     try:
-        response = client.models.generate_content(
-            model="gemini-3.1-flash-lite",
-            contents=prompt,
-            config={"temperature": 0.2}
+        response = client.messages.create(
+            model="claude-sonnet-5",
+            max_tokens=200000,
+            messages=[
+                {"role": "user", "content": prompt},
+            ]
         )
         
-        raw_response = response.text.strip()
+        raw_response = response.content[0].text.strip()
         
         # Strip markdown fences if present
         if raw_response.startswith("```"):

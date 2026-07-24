@@ -1,8 +1,10 @@
+from _typeshed import importlib
 import os
 import json
 import logging
-from google import genai
+import anthropic
 from dotenv import load_dotenv
+
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +15,7 @@ dotenv_path = os.path.join(backend_dir, ".env")
 load_dotenv(dotenv_path)
 
 # Initialize Gemini Client
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 def _extract_bullets(resume) -> dict:
     """
@@ -96,13 +98,23 @@ def validate_resume(original_resume, edited_resume, min_chars=50, max_chars=300)
 
         try:
             logger.info(f"Sending {len(comparisons)} bullet comparisons to Gemini fabrication validator...")
-            response = client.models.generate_content(
-                model="gemini-3.1-flash-lite",
-                contents=contents,
-                config={"temperature": 0.1}
+            # response = client.models.generate_content(
+            #     model="gemini-3.1-flash-lite",
+            #     contents=contents,
+            #     config={"temperature": 0.1}
+            # )
+            response = client.messages.create(
+                model="claude-haiku-4-5",
+                max_tokens=200000,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": contents,
+                    }
+                ], 
             )
 
-            raw_response = response.text.strip()
+            raw_response = response.content[0].text.strip()
             
             # Clean markdown code fences
             if raw_response.startswith("```"):
