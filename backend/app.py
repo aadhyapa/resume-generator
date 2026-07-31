@@ -172,7 +172,7 @@ async def generate_resume(
         raise HTTPException(status_code=500, detail="Resume generation failed")
 
 
-@app.post("/store-resume")
+#@app.post("/store-resume")
 def store_resume(resume: dict = Body(...)):
     logger.info("Entering store_resume route")
     try:
