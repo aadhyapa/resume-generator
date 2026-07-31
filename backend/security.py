@@ -5,7 +5,7 @@ import threading
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
-from typing import Deque
+from typing import Deque, Optional
 
 from fastapi import Header, HTTPException, Request, status
 
@@ -92,7 +92,7 @@ class InMemoryRateLimiter:
 rate_limiter = InMemoryRateLimiter()
 
 
-def _extract_bearer_token(authorization: str | None) -> str | None:
+def _extract_bearer_token(authorization: Optional[str]) -> Optional[str]:
     if not authorization:
         return None
 
@@ -105,8 +105,8 @@ def _extract_bearer_token(authorization: str | None) -> str | None:
 
 async def require_generate_resume_access(
     request: Request,
-    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
-    authorization: str | None = Header(default=None),
+    x_api_key: Optional[str] = Header(default=None, alias="X-API-Key"),
+    authorization: Optional[str] = Header(default=None),
 ) -> str:
     """
     Authenticate and rate-limit calls that can spend external AI API credits.

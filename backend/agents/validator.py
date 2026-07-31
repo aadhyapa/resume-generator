@@ -1,4 +1,3 @@
-from _typeshed import importlib
 import os
 import json
 import logging
