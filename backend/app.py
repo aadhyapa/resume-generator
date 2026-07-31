@@ -3,7 +3,7 @@ import sys
 import os
 import json
 import copy
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import Depends, FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
@@ -27,6 +27,7 @@ from agents.editor import editor
 from algorithms.matchmaker import matchmaker
 from algorithms.selector import selector
 from algorithms.formatter import formater
+from security import require_generate_resume_access, validate_job_description_size
 
 app = FastAPI()
 
@@ -40,13 +41,18 @@ app.add_middleware(
 )
 
 @app.post("/generate_resume")
-async def generate_resume(job_description: str = Body(..., embed=True)):
+async def generate_resume(
+    job_description: str = Body(..., embed=True),
+    caller_identity: str = Depends(require_generate_resume_access),
+):
     logger.info("Entering generate_resume route")
     try:
-        job_description.strip()
+        job_description = job_description.strip()
         if not job_description:
             logger.warning("Empty job description")
             raise HTTPException(status_code=400, detail="Job description cannot be empty")
+        validate_job_description_size(job_description)
+        logger.info("generate_resume authorized for %s", caller_identity)
 
         # Processing Job Description
         logger.info("Running job_description_chunker")
@@ -159,9 +165,11 @@ async def generate_resume(job_description: str = Body(..., embed=True)):
         logger.info("generate_resume completed successfully")
         return {"message": "Resume generated successfully", "resume": assembled_resume}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Exception in generate_resume: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Resume generation failed")
 
 
 @app.post("/store-resume")
