@@ -11,7 +11,7 @@ def generate_embedding(text: str) -> list:
     :param text: The text to generate embeddings for.
     :return: A list of floats representing the embedding.
     """
-    result = client.models.embed_content(model="gemini-embedding-2", contents=text)
+    result = client.models.embed_content(model="gemini-embedding-001", contents=text)
     if result.embeddings:
         return result.embeddings[0].values
     return []
