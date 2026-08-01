@@ -6,6 +6,8 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   // Add permissions to query the active tab and execute content scripts programmatically
   manifest: {
+    name: "RezMaker",
+    description: "AI-powered resume generator and editor",
     permissions: ["activeTab", "scripting", "storage"],
     host_permissions: ["<all_urls>"],
   },

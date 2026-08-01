@@ -1,6 +1,6 @@
 {
-  "name": "wxt-react-starter",
-  "description": "manifest.json description",
+  "name": "rezmaker",
+  "description": "AI-powered resume generator and editor",
   "private": true,
   "version": "0.0.0",
   "type": "module",
