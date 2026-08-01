@@ -16,11 +16,16 @@ export default defineBackground(() => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutes timeout
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (message.authToken) {
+        headers['X-API-Key'] = message.authToken;
+      }
+
       fetch('https://resume-generator-jtv0.onrender.com/generate_resume', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ job_description: message.jobDescription }),
         signal: controller.signal,
       })

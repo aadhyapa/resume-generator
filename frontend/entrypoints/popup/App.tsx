@@ -12,6 +12,8 @@ function App() {
   const [status, setStatus] = useState<GenerationStatus>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [resumeData, setResumeData] = useState<Resume | null>(null);
+  const [authToken, setAuthToken] = useState("");
+  const [showToken, setShowToken] = useState(false);
 
   function updateState(locallyStoredState: unknown) {
     if (!locallyStoredState) return;
@@ -29,11 +31,21 @@ function App() {
     }
   }
 
+  const handleAuthTokenChange = (val: string) => {
+    setAuthToken(val);
+    browser.storage.local.set({ authToken: val });
+  };
+
   // Mounting hooks
   useEffect(() => {
-    browser.storage.local.get("generationState").then((result: any) => {
-      if (result && result.generationState) {
-        updateState(result.generationState);
+    browser.storage.local.get(["generationState", "authToken"]).then((result: any) => {
+      if (result) {
+        if (result.generationState) {
+          updateState(result.generationState);
+        }
+        if (result.authToken) {
+          setAuthToken(result.authToken);
+        }
       }
     });
     const listener = (
@@ -104,6 +116,7 @@ function App() {
       .sendMessage({
         type: "GENERATE_RESUME",
         jobDescription,
+        authToken,
       })
       .catch((err) => {
         console.error(err);
@@ -126,6 +139,43 @@ function App() {
       </div>
 
       <div className="space-y-4">
+        {/* API Key / Auth Token Input */}
+        <div className="bg-black/25 border border-white/10 rounded-xl p-3 space-y-2">
+          <div className="flex justify-between items-center text-[11px] text-white/80 px-1 font-semibold">
+            <span className="flex items-center gap-1">
+              <svg className="w-3.5 h-3.5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              Auth Token
+            </span>
+          </div>
+          <div className="relative flex items-center">
+            <input
+              type={showToken ? "text" : "password"}
+              value={authToken}
+              onChange={(e) => handleAuthTokenChange(e.target.value)}
+              placeholder="Enter your auth token..."
+              className="w-full bg-black/20 text-white placeholder-white/40 border border-white/20 rounded-lg py-1.5 pl-3 pr-8 text-xs focus:outline-none focus:ring-1 focus:ring-pink-300 focus:border-transparent transition-all duration-300 font-mono"
+            />
+            <button
+              type="button"
+              onClick={() => setShowToken(!showToken)}
+              className="absolute right-2 text-white/50 hover:text-white transition-colors cursor-pointer"
+            >
+              {showToken ? (
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+
         {/* Main Action Buttons */}
         <div className="flex justify-center">
           <Button
