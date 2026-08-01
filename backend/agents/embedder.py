@@ -1,20 +1,19 @@
-
 from dotenv import load_dotenv
-import voyageai
+from google import genai
 import os
 
 load_dotenv()
-client = voyageai.Client(api_key=os.getenv("VOYAGE_API_KEY"))
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def generate_embedding(text: str) -> list:
     """
-    Generate embeddings for a given text using the Voyage AI API.
+    Generate embeddings for a given text using the Gemini API.
     :param text: The text to generate embeddings for.
     :return: A list of floats representing the embedding.
     """
-    result = client.embed([text], model="voyage-code-3")
+    result = client.models.embed_content(model="gemini-embedding-2", contents=text)
     if result.embeddings:
-        return result.embeddings[0]
+        return result.embeddings[0].values
     return []
 
 def embed(chunks):

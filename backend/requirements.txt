@@ -5,5 +5,4 @@ fastapi
 spacy
 google-genai
 uvicorn
-voyageai
 anthropic
