@@ -41,6 +41,13 @@ def formater(edited_bullets, resume):
                     "bullets"
                 ] = sectioned_bullets.get(sub_section_id, [])
 
+        # Remove sections if their sub_sections are empty
+        for section in list(resume.get("sections", [])):
+            section_id = section["section_id"]
+            if section_id in final_resume:
+                if not final_resume[section_id].get("sub_sections"):
+                    del final_resume[section_id]
+
         logger.info("Exiting formater")
         return final_resume
 

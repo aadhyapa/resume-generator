@@ -24,7 +24,8 @@ export function getRenderableSections(resume: Resume): ResumeSection[] {
   return Object.entries(resume)
     .filter(([key]) => !RESERVED_RESUME_KEYS.has(key))
     .map(([, value]) => value)
-    .filter(isResumeSection);
+    .filter(isResumeSection)
+    .filter((section) => section.sub_sections && Object.keys(section.sub_sections).length > 0);
 }
 
 export function getSectionTitle(section: ResumeSection) {
