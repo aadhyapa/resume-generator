@@ -30,19 +30,18 @@ async def main():
         print(result["message"])
         print("\nGenerated resume structure (first 3 experience groups or bullets shown):")
         
-        resume = result["edited_resume"]
+        resume = result["resume"]
         if isinstance(resume, dict):
-            for exp_id, bullets in list(resume.items())[:3]:
-                print(f"\nExperience ID: {exp_id} ({len(bullets)} bullets)")
-                for b in bullets:
-                    print(f"  - [{b.get('bullet_id')}] {b.get('text')}")
-                    if "bold_words" in b:
-                        print(f"    (Bold words: {b['bold_words']})")
-        else:
-            for b in list(resume)[:5]:
-                print(f"  - [{b.get('bullet_id')}] (Experience: {b.get('experience_id')}) (Edited: {b.get('edited')}) {b.get('text')}")
-                if "bold_words" in b:
-                    print(f"    (Bold words: {b['bold_words']})")
+            for key, val in resume.items():
+                if isinstance(val, dict) and "sub_sections" in val:
+                    print(f"\nSection: {key}")
+                    for sub_id, sub_sec in val["sub_sections"].items():
+                        bullets = sub_sec.get("bullets", [])
+                        print(f"  SubSection: {sub_id} ({len(bullets)} bullets)")
+                        for b in bullets:
+                            print(f"    - [{b.get('bullet_id')}] {b.get('text')}")
+                            if "bold_words" in b:
+                                print(f"      (Bold words: {b['bold_words']})")
                     
     except Exception as e:
         print("\n=== ERROR ===")

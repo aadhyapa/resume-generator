@@ -23,7 +23,8 @@ export default defineBackground(() => {
         headers['X-API-Key'] = message.authToken;
       }
 
-      fetch('https://resume-generator-jtv0.onrender.com/generate_resume', {
+      const apiUrl = import.meta.env.WXT_API_URL || 'https://resume-generator-jtv0.onrender.com/generate_resume';
+      fetch(apiUrl, {
         method: 'POST',
         headers,
         body: JSON.stringify({ job_description: message.jobDescription }),

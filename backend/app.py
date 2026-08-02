@@ -111,7 +111,6 @@ async def generate_resume(
                     b_id = b.get("bullet_id")
                     if b_id in failed_ids and b_id in orig_map:
                         reset_bullet = copy.deepcopy(orig_map[b_id])
-                        reset_bullet.pop("bold_words", None)
                         failed_subset.append(reset_bullet)
 
                 # Run editor on the subset and capture the returned edited list

@@ -376,7 +376,7 @@ function renderSubSection(subSection: ResumeSubSection) {
             ? `
         <div class="sub-section-description">
           <ul>
-            ${bullets.map((bullet) => `<li ${EDITABLE_ATTRIBUTES}>${renderBulletText(bullet.text, bullet.bold_words)}</li>`).join("\n            ")}
+            ${bullets.map((bullet) => `<li data-bullet-id="${bullet.bullet_id || ""}" ${EDITABLE_ATTRIBUTES}>${renderBulletText(bullet.text, bullet.bold_words)}</li>`).join("\n            ")}
           </ul>
         </div>`
             : ""

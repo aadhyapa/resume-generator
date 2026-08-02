@@ -12,7 +12,7 @@ Rules:
 3. Do Not Fabricate: Do not invent metrics, tools, or experiences not present in the original text.
 4. WHO Formula: If editing, structure the text as: **W**hat you did (Action verb) + **H**ow you did it (Tool/skill) + **O**utcome (Result/impact).
 5. Strict Constraints: The updated "text" string MUST be under <max_chars> characters and over <min_chars> characters.
-6. Identify Bold Words: For each object, populate a "bold_words" array containing the specific exact substrings from the updated "text" that should be emphasized (e.g., key technologies, metrics, or strong action verbs).
+6. Identify Bold Words: For each object, populate a "bold_words" array containing the specific exact substrings from the updated "text" that should be emphasized (e.g., key technologies, metrics, or strong action verbs). Carefully consider the input "bold_words" array for that bullet point; preserve those bolded words/phrases if they are still present and relevant in the rewritten text, or select new or modified words/phrases to bold as appropriate for the updated text.
 
 
 Output Format:

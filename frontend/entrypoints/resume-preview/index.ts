@@ -107,10 +107,97 @@ function enablePreviewEditing(iframe: HTMLIFrameElement) {
   page.setAttribute("spellcheck", "false");
   page.tabIndex = 0;
   page.focus();
-  page.addEventListener("input", () => updateOverflowWarning(iframe));
-  doc.addEventListener("input", () => updateOverflowWarning(iframe));
+  page.addEventListener("input", () => {
+    updateOverflowWarning(iframe);
+    syncEditsToStorage(iframe);
+  });
+  doc.addEventListener("input", () => {
+    updateOverflowWarning(iframe);
+    syncEditsToStorage(iframe);
+  });
   doc.addEventListener("click", (event) => {
     if ((event.target as Element | null)?.closest("a")) event.preventDefault();
+  });
+}
+
+async function syncEditsToStorage(iframe: HTMLIFrameElement) {
+  const doc = iframe.contentDocument;
+  if (!doc) return;
+
+  const result = (await browser.storage.local.get("generationState")) as any;
+  const generationState = result?.generationState;
+  if (!generationState || !generationState.resumeData) return;
+
+  const resumeData = JSON.parse(JSON.stringify(generationState.resumeData));
+
+  // Build a map of bullet edits from the DOM
+  const bulletElements = doc.querySelectorAll("li[data-bullet-id]");
+  const bulletMap: Record<string, { text: string; bold_words: string[] }> = {};
+
+  bulletElements.forEach((el) => {
+    const bulletId = el.getAttribute("data-bullet-id");
+    if (!bulletId) return;
+
+    const text = el.textContent || "";
+    const boldTags = el.querySelectorAll("b, strong");
+    const boldWords = Array.from(boldTags)
+      .map((node) => node.textContent?.trim() || "")
+      .filter(Boolean);
+
+    bulletMap[bulletId] = { text, bold_words: boldWords };
+  });
+
+  // Traverse and update resumeData
+  let changed = false;
+  for (const key in resumeData) {
+    if (typeof resumeData[key] === "object" && resumeData[key] !== null) {
+      const section = resumeData[key] as any;
+      if (section.sub_sections) {
+        for (const subId in section.sub_sections) {
+          const subSection = section.sub_sections[subId];
+          if (Array.isArray(subSection.bullets)) {
+            subSection.bullets = subSection.bullets.map((bullet: any) => {
+              const bulletId = bullet.bullet_id;
+              if (bulletMap[bulletId]) {
+                const newText = bulletMap[bulletId].text;
+                const newBoldWords = bulletMap[bulletId].bold_words;
+                
+                const hasTextChange = bullet.text !== newText;
+                const hasBoldChange =
+                  !bullet.bold_words ||
+                  bullet.bold_words.length !== newBoldWords.length ||
+                  newBoldWords.some((w: string) => !bullet.bold_words.includes(w));
+
+                if (hasTextChange || hasBoldChange) {
+                  changed = true;
+                  return {
+                    ...bullet,
+                    text: newText,
+                    bold_words: newBoldWords,
+                    edited: true,
+                  };
+                }
+              }
+              return bullet;
+            });
+          }
+        }
+      }
+    }
+  }
+
+  if (changed) {
+    await browser.storage.local.set({
+      generationState: {
+        ...generationState,
+        resumeData,
+      },
+    });
+  }
+
+  // Also keep currentResumeHtml in sync
+  await browser.storage.local.set({
+    currentResumeHtml: "<!DOCTYPE html>\n" + doc.documentElement.outerHTML,
   });
 }
 

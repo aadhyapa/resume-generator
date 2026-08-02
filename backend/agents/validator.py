@@ -104,7 +104,7 @@ def validate_resume(original_resume, edited_resume, min_chars=50, max_chars=300)
             # )
             response = client.messages.create(
                 model="claude-haiku-4-5",
-                max_tokens=200000,
+                max_tokens=4000,
                 messages=[
                     {
                         "role": "user",
@@ -113,7 +113,13 @@ def validate_resume(original_resume, edited_resume, min_chars=50, max_chars=300)
                 ], 
             )
 
-            raw_response = response.content[0].text.strip()
+            raw_response = ""
+            for block in response.content:
+                if getattr(block, "type", None) == "text":
+                    raw_response += block.text
+                elif hasattr(block, "text") and not getattr(block, "type", None) == "thinking":
+                    raw_response += block.text
+            raw_response = raw_response.strip()
             
             # Clean markdown code fences
             if raw_response.startswith("```"):

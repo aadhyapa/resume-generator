@@ -35,7 +35,14 @@ def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
     else:
         flat_resume = resume
 
-    trimmed_resume = [{'bullet_id': bullet['bullet_id'], 'text': bullet['text']} for bullet in flat_resume if isinstance(bullet, dict) and 'bullet_id' in bullet]
+    trimmed_resume = [
+        {
+            'bullet_id': bullet['bullet_id'],
+            'text': bullet['text'],
+            'bold_words': bullet.get('bold_words', [])
+        }
+        for bullet in flat_resume if isinstance(bullet, dict) and 'bullet_id' in bullet
+    ]
 
     # 2. Read the prompt template
     prompt_template_path = os.path.join(current_dir, "prompts", "editor.txt")
@@ -64,13 +71,19 @@ def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
     try:
         response = client.messages.create(
             model="claude-sonnet-5",
-            max_tokens=200000,
+            max_tokens=4000,
             messages=[
                 {"role": "user", "content": prompt},
             ]
         )
         
-        raw_response = response.content[0].text.strip()
+        raw_response = ""
+        for block in response.content:
+            if getattr(block, "type", None) == "text":
+                raw_response += block.text
+            elif hasattr(block, "text") and not getattr(block, "type", None) == "thinking":
+                raw_response += block.text
+        raw_response = raw_response.strip()
         
         # Strip markdown fences if present
         if raw_response.startswith("```"):
