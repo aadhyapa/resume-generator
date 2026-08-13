@@ -3,7 +3,7 @@ import sys
 import os
 import json
 import copy
-from fastapi import Depends, FastAPI, HTTPException, Body
+from fastapi import Depends, FastAPI, HTTPException, Body, Response
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
@@ -30,6 +30,7 @@ from algorithms.formatter import formater
 from security import require_generate_resume_access, validate_job_description_size
 from config import get_settings
 from services.v2_pipeline import generate_resume_v2
+from services.pdf_compiler import compile_resume_with_length_check
 
 app = FastAPI()
 
@@ -177,6 +178,39 @@ async def generate_resume(
     except Exception as e:
         logger.error(f"Exception in generate_resume: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Resume generation failed")
+
+
+@app.post("/render_resume_pdf")
+async def render_resume_pdf(
+    resume: dict = Body(..., embed=True),
+    caller_identity: str = Depends(require_generate_resume_access),
+):
+    logger.info("Entering render_resume_pdf route")
+    try:
+        if not resume:
+            logger.warning("Empty resume payload")
+            raise HTTPException(status_code=400, detail="Resume cannot be empty")
+        logger.info("render_resume_pdf authorized for %s", caller_identity)
+
+        result = compile_resume_with_length_check(resume)
+        logger.info(
+            "render_resume_pdf completed successfully in %s attempt(s); page_count=%s",
+            result.attempts,
+            result.page_count,
+        )
+        return Response(
+            content=result.pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "X-Resume-Page-Count": str(result.page_count),
+                "X-Resume-Fits-Page-Limit": str(result.fits_page_limit).lower(),
+            },
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Exception in render_resume_pdf: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Resume PDF rendering failed")
 
 
 #@app.post("/store-resume")

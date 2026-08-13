@@ -8,6 +8,8 @@ export default defineBackground(() => {
         generationState: {
           status: 'generating',
           jobDescription: message.jobDescription,
+          companyName: message.companyName,
+          roleName: message.roleName,
           resumeData: null,
           errorMsg: '',
         }
@@ -47,6 +49,8 @@ export default defineBackground(() => {
             generationState: {
               status: 'success',
               jobDescription: message.jobDescription,
+              companyName: message.companyName,
+              roleName: message.roleName,
               resumeData: data.resume,
               errorMsg: '',
             }
@@ -59,6 +63,8 @@ export default defineBackground(() => {
             generationState: {
               status: 'error',
               jobDescription: message.jobDescription,
+              companyName: message.companyName,
+              roleName: message.roleName,
               resumeData: null,
               errorMsg: isTimeout
                 ? 'Generation timed out. The server took too long to respond.'
