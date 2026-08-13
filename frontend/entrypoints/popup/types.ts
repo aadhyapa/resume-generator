@@ -51,6 +51,8 @@ export interface Resume {
 
 export interface GenerationState {
   jobDescription?: string;
+  companyName?: string;
+  roleName?: string;
   status?: GenerationStatus;
   resumeData?: Resume | null;
   errorMsg?: string;

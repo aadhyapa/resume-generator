@@ -6,9 +6,12 @@ import { ResumePreview } from "./components/ResumePreview";
 import type { GenerationState, GenerationStatus, Resume } from "./types";
 import { isResume } from "./utils/resume";
 import { renderResumeHtml } from "./utils/renderResumeHtml";
+import { renderResumeLatex } from "./utils/renderResumeLatex";
 
 function App() {
   const [jobDescription, setJobDescription] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [roleName, setRoleName] = useState("");
   const [status, setStatus] = useState<GenerationStatus>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [resumeData, setResumeData] = useState<Resume | null>(null);
@@ -21,6 +24,8 @@ function App() {
       const state = locallyStoredState as GenerationState;
       if (state.jobDescription !== undefined)
         setJobDescription(state.jobDescription);
+      if (state.companyName !== undefined) setCompanyName(state.companyName);
+      if (state.roleName !== undefined) setRoleName(state.roleName);
       if (state.status !== undefined) setStatus(state.status);
       if (state.resumeData !== undefined) {
         const nextResume = isResume(state.resumeData) ? state.resumeData : null;
@@ -84,12 +89,16 @@ function App() {
   const handleClear = () => {
     setJobDescription("");
     setResumeData(null);
+    setCompanyName("");
+    setRoleName("");
     setErrorMsg("");
     setStatus("idle");
     browser.storage.local.set({
       generationState: {
         status: "idle",
         jobDescription: "",
+        companyName: "",
+        roleName: "",
         resumeData: null,
         errorMsg: "",
       },
@@ -100,7 +109,7 @@ function App() {
     if (!resumeData) return;
 
     const html = renderResumeHtml(resumeData);
-    await browser.storage.local.set({ currentResumeHtml: html });
+    await browser.storage.local.set({ currentResumeHtml: html, currentResumeLatex: renderResumeLatex(resumeData) });
     const url = browser.runtime.getURL("/resume-preview.html");
     await browser.windows.create({
       url,
@@ -110,12 +119,65 @@ function App() {
     });
   };
 
+
+  const getPdfFilename = () => {
+    const fallbackCompany = companyName.trim() || "company";
+    const fallbackRole = roleName.trim() || "jobtitle";
+    const sanitize = (value: string) =>
+      value
+        .trim()
+        .replace(/[^a-z0-9]+/gi, "_")
+        .replace(/^_+|_+$/g, "")
+        .toLowerCase() || "resume";
+    return `${sanitize(fallbackCompany)}_${sanitize(fallbackRole)}.pdf`;
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!resumeData) return;
+    setErrorMsg("");
+    try {
+      const latex = renderResumeLatex(resumeData);
+      await browser.storage.local.set({ currentResumeLatex: latex });
+      const apiBase = import.meta.env.WXT_API_URL ||
+        "https://resume-generator-jtv0.onrender.com/generate_resume";
+      const pdfUrl = apiBase.replace(/\/generate_resume\/?$/, "/render_resume_pdf");
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (authToken) headers["X-API-Key"] = authToken;
+
+      const response = await fetch(pdfUrl, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ resume: resumeData }),
+      });
+      if (!response.ok) throw new Error("Failed to render LaTeX PDF.");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = getPdfFilename();
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error(err);
+      const message = err.message || "An unknown error occurred while downloading the PDF.";
+      setErrorMsg(message);
+      window.alert(message);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!jobDescription.trim()) return;
     browser.runtime
       .sendMessage({
         type: "GENERATE_RESUME",
         jobDescription,
+        companyName,
+        roleName,
         authToken,
       })
       .catch((err) => {
@@ -232,6 +294,24 @@ function App() {
                   {jobDescription.length} chars
                 </span>
               </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Company name"
+                  disabled={status === "generating"}
+                  className="w-full bg-black/30 text-white/95 placeholder-white/50 border border-white/25 rounded-xl p-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all duration-300"
+                />
+                <input
+                  type="text"
+                  value={roleName}
+                  onChange={(e) => setRoleName(e.target.value)}
+                  placeholder="Role name"
+                  disabled={status === "generating"}
+                  className="w-full bg-black/30 text-white/95 placeholder-white/50 border border-white/25 rounded-xl p-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent transition-all duration-300"
+                />
+              </div>
               <textarea
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
@@ -303,6 +383,13 @@ function App() {
                 className="preview-button"
               >
                 Preview
+              </Button>
+              <Button
+                type="button"
+                onClick={handleDownloadPdf}
+                className="preview-button"
+              >
+                Download PDF
               </Button>
               <Button
                 type="button"
