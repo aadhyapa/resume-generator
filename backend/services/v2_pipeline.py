@@ -65,6 +65,10 @@ def generate_resume_v2(job_description: str, *, master_resume_path=None, llm_cli
 
     if not final_compile.fits_page_limit:
         trimmed, _ = trim_to_page_limit(master_resume, trimmed, ranking, compiler=compiler, page_counter=page_counter)
+        trace.trimmed_content = trimmed.model_dump(mode="python")
+        remaining = set(trimmed.selected_bullet_ids())
+        rewrites.rewritten_bullets = [bullet for bullet in rewrites.rewritten_bullets if bullet.bullet_id in remaining]
+        trace.rewrite_output = rewrites.model_dump(mode="python")
         final_resume = render_selected_resume(master_resume, trimmed, rewrites)
         final_compile = compile_resume_with_length_check(final_resume, compiler=compiler, page_counter=page_counter)
 

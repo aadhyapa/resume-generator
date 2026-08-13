@@ -22,6 +22,8 @@ class BulletRewriteResponse(BaseModel):
             raise ValueError("Duplicate rewritten bullet IDs")
         if set(ids) != selected_set:
             raise ValueError("Rewriter output must include exactly the selected bullet IDs")
+        if ids != selected:
+            raise ValueError("Rewriter output must include exactly the selected bullet IDs in the same order")
         source = master_resume.bullets_by_id()
         for bullet in self.rewritten_bullets:
             if bullet.bullet_id not in source:
@@ -31,6 +33,6 @@ class BulletRewriteResponse(BaseModel):
                 raise ValueError(f"original_text for {bullet.bullet_id} does not match master resume")
             original_numbers = re.findall(r"\d+(?:\.\d+)?%?|→|->", bullet.original_text)
             rewritten_numbers = re.findall(r"\d+(?:\.\d+)?%?|→|->", bullet.rewritten_text)
-            if original_numbers != rewritten_numbers:
+            if sorted(original_numbers) != sorted(rewritten_numbers):
                 raise ValueError(f"Numeric/date-like facts changed for {bullet.bullet_id}")
         return self

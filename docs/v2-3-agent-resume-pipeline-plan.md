@@ -502,7 +502,7 @@ Do not delete V1 components in the first implementation. Once V2 is implemented,
 
 ## Explicit non-goals for this change
 
-- Do not integrate V2 into `/generate_resume` yet.
+- Do not enable V2 by default; keep it behind the `RESUME_PIPELINE=v2` feature flag.
 - Do not remove embeddings, matchmaker, selector, chunker, editor, or validator yet.
 - Do not change the frontend API contract yet.
 - Do not call external LLMs in tests.

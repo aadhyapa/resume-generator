@@ -68,21 +68,28 @@ def select_resume_content(master_resume: MasterResume, ranking: ResumeRanking, t
         for bullet in ordered[:target]:
             add_bullet(sub, bullet, "coverage minimum")
 
-    # Recommended pass.
-    candidates: list[tuple[float, int, int, SubsectionRanking, BulletRanking]] = []
-    for sub in eligible_subsections:
-        section = section_rankings[sub.section_id]
-        current = selected_bullet_rankings.get(sub.sub_section_id, [])
-        for bullet in sub.bullets:
-            candidates.append((bullet_marginal_value(section, sub, bullet, current), subsection_order[sub.sub_section_id], bullet_order[bullet.bullet_id], sub, bullet))
-    candidates.sort(key=lambda item: (-item[0], item[1], item[2]))
-
-    for value, _, _, sub, bullet in candidates:
-        existing_count = len(selected.subsections.get(sub.sub_section_id, SelectedSubsection(sub_section_id=sub.sub_section_id, section_id=sub.section_id)).bullet_ids)
-        if existing_count >= sub.recommended_bullets and len(selected.selected_bullet_ids()) >= max(1, total_bullet_limit // 2):
-            continue
-        add_bullet(sub, bullet, f"marginal value {value:.2f}")
-        if len(selected.selected_bullet_ids()) >= total_bullet_limit:
+    # Recommended pass. Recompute marginal values after each addition so sibling
+    # redundancy penalties reflect the current selected set.
+    while len(selected.selected_bullet_ids()) < total_bullet_limit:
+        candidates: list[tuple[float, int, int, SubsectionRanking, BulletRanking]] = []
+        for sub in eligible_subsections:
+            section = section_rankings[sub.section_id]
+            current = selected_bullet_rankings.get(sub.sub_section_id, [])
+            existing_ids = {bullet.bullet_id for bullet in current}
+            existing_count = len(existing_ids)
+            if existing_count >= sub.maximum_bullets:
+                continue
+            if existing_count >= sub.recommended_bullets and len(selected.selected_bullet_ids()) >= max(1, total_bullet_limit // 2):
+                continue
+            for bullet in sub.bullets:
+                if bullet.bullet_id in existing_ids:
+                    continue
+                value = bullet_marginal_value(section, sub, bullet, current)
+                candidates.append((value, subsection_order[sub.sub_section_id], bullet_order[bullet.bullet_id], sub, bullet))
+        if not candidates:
+            break
+        value, _, _, sub, bullet = sorted(candidates, key=lambda item: (-item[0], item[1], item[2]))[0]
+        if not add_bullet(sub, bullet, f"marginal value {value:.2f}"):
             break
 
     # Preserve master resume bullet order inside each subsection.

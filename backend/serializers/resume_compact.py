@@ -46,13 +46,18 @@ def serialize_master_resume_for_ranking(master_resume: MasterResume) -> str:
 
 def serialize_selected_content_for_rewriter(master_resume: MasterResume, selected: SelectedResumeContent) -> str:
     bullets = master_resume.bullets_by_id()
-    subsections = master_resume.subsection_by_id()
     lines: list[str] = []
-    for subsection_id, selected_subsection in selected.subsections.items():
-        subsection = subsections[subsection_id]
+    for subsection in master_resume.sub_sections:
+        selected_subsection = selected.subsections.get(subsection.sub_section_id)
+        if not selected_subsection:
+            continue
         lines.append(f"[{subsection.sub_section_id}] {_metadata_line(subsection)}".rstrip())
         for bullet_id in selected_subsection.bullet_ids:
             bullet = bullets[bullet_id]
             lines.append(f"[{bullet.bullet_id}] {bullet.text}")
         lines.append("")
     return "\n".join(lines).strip()
+
+def selected_bullet_ids_in_master_order(master_resume: MasterResume, selected: SelectedResumeContent) -> list[str]:
+    selected_ids = set(selected.selected_bullet_ids())
+    return [bullet.bullet_id for bullet in master_resume.bullets if bullet.bullet_id in selected_ids]

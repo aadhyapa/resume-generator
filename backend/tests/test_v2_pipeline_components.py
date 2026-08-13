@@ -12,6 +12,8 @@ from models.jd import StructuredJobDescription
 from models.ranking import ResumeRanking
 from models.resume import MasterResume
 from models.rewriting import BulletRewriteResponse
+from models.selection import SelectedResumeContent, SelectedSubsection
+from serializers.resume_compact import serialize_selected_content_for_rewriter
 from services.v2_pipeline import generate_resume_v2
 
 
@@ -171,17 +173,40 @@ class V2ComponentTest(unittest.TestCase):
         self.assertEqual(result.page_count, 1)
         self.assertLess(len(trimmed.selected_bullet_ids()), len(selected.selected_bullet_ids()))
 
-    def test_agent3_schema_rejects_extra_ids_and_changed_numbers(self):
+    def test_agent3_schema_rejects_extra_ids_reordered_ids_and_changed_numbers(self):
         master = sample_master_resume()
-        selected_ids = ["exp1_b1"]
-        ok = BulletRewriteResponse.model_validate({"rewritten_bullets": [{"bullet_id": "exp1_b1", "original_text": "Improved CI reliability by 30% using Python", "rewritten_text": "Improved CI reliability by 30% with Python"}]})
+        selected_ids = ["exp1_b1", "exp2_b1"]
+        ok = BulletRewriteResponse.model_validate({"rewritten_bullets": [
+            {"bullet_id": "exp1_b1", "original_text": "Improved CI reliability by 30% using Python", "rewritten_text": "Using Python, improved CI reliability by 30%"},
+            {"bullet_id": "exp2_b1", "original_text": "Built scalable Go backend services", "rewritten_text": "Built scalable Go backend services"},
+        ]})
         ok.validate_against_selection(master, selected_ids)
-        bad_number = BulletRewriteResponse.model_validate({"rewritten_bullets": [{"bullet_id": "exp1_b1", "original_text": "Improved CI reliability by 30% using Python", "rewritten_text": "Improved CI reliability by 40% with Python"}]})
+        bad_order = BulletRewriteResponse.model_validate({"rewritten_bullets": [
+            {"bullet_id": "exp2_b1", "original_text": "Built scalable Go backend services", "rewritten_text": "Built scalable Go backend services"},
+            {"bullet_id": "exp1_b1", "original_text": "Improved CI reliability by 30% using Python", "rewritten_text": "Improved CI reliability by 30% with Python"},
+        ]})
+        with self.assertRaises(ValueError):
+            bad_order.validate_against_selection(master, selected_ids)
+        bad_number = BulletRewriteResponse.model_validate({"rewritten_bullets": [
+            {"bullet_id": "exp1_b1", "original_text": "Improved CI reliability by 30% using Python", "rewritten_text": "Improved CI reliability by 40% with Python"},
+            {"bullet_id": "exp2_b1", "original_text": "Built scalable Go backend services", "rewritten_text": "Built scalable Go backend services"},
+        ]})
         with self.assertRaises(ValueError):
             bad_number.validate_against_selection(master, selected_ids)
         bad_id = BulletRewriteResponse.model_validate({"rewritten_bullets": [{"bullet_id": "fake", "original_text": "x", "rewritten_text": "x"}]})
         with self.assertRaises(ValueError):
             bad_id.validate_against_selection(master, selected_ids)
+
+    def test_selected_content_for_rewriter_serializes_in_master_resume_order(self):
+        master = sample_master_resume()
+        selected = SelectedResumeContent(
+            subsections={
+                "exp2": SelectedSubsection(sub_section_id="exp2", section_id="sec_experience", bullet_ids=["exp2_b1"]),
+                "exp1": SelectedSubsection(sub_section_id="exp1", section_id="sec_experience", bullet_ids=["exp1_b1"]),
+            }
+        )
+        serialized = serialize_selected_content_for_rewriter(master, selected)
+        self.assertLess(serialized.index("[exp1]"), serialized.index("[exp2]"))
 
     def test_pipeline_sequence_uses_three_agents_once_before_compression(self):
         master_path = Path(__file__).with_name("tmp_master_resume.json")

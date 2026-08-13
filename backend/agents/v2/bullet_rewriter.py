@@ -8,14 +8,14 @@ from models.jd import StructuredJobDescription
 from models.resume import MasterResume
 from models.rewriting import BulletRewriteResponse
 from models.selection import SelectedResumeContent
-from serializers.resume_compact import serialize_selected_content_for_rewriter
+from serializers.resume_compact import selected_bullet_ids_in_master_order, serialize_selected_content_for_rewriter
 
 PROMPT_PATH = Path(__file__).with_name("prompts") / "bullet_rewriter.txt"
 
 
 def rewrite_selected_bullets(structured_jd: StructuredJobDescription, master_resume: MasterResume, selected: SelectedResumeContent, llm_client: LLMClient | None = None, model: str | None = None, compression: bool = False) -> BulletRewriteResponse:
     settings = get_settings()
-    selected_ids = selected.selected_bullet_ids()
+    selected_ids = selected_bullet_ids_in_master_order(master_resume, selected)
     prompt = PROMPT_PATH.read_text(encoding="utf-8")
     compression_instruction = "The rewritten resume exceeds one page. Compress wording while preserving every factual claim, metric, technology, and accomplishment." if compression else "Not active."
     prompt = prompt.replace("<compression_instruction>", compression_instruction)
