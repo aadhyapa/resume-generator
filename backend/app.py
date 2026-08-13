@@ -28,6 +28,8 @@ from algorithms.matchmaker import matchmaker
 from algorithms.selector import selector
 from algorithms.formatter import formater
 from security import require_generate_resume_access, validate_job_description_size
+from config import get_settings
+from services.v2_pipeline import generate_resume_v2
 
 app = FastAPI()
 
@@ -53,6 +55,12 @@ async def generate_resume(
             raise HTTPException(status_code=400, detail="Job description cannot be empty")
         validate_job_description_size(job_description)
         logger.info("generate_resume authorized for %s", caller_identity)
+
+        if get_settings().resume_pipeline == "v2":
+            logger.info("Running v2 resume pipeline")
+            result = generate_resume_v2(job_description)
+            logger.info("generate_resume v2 completed successfully")
+            return {"message": "Resume generated successfully", "resume": result["resume"]}
 
         # Processing Job Description
         logger.info("Running job_description_chunker")

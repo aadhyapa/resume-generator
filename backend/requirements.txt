@@ -6,3 +6,4 @@ spacy
 google-genai
 uvicorn
 anthropic
+pydantic
