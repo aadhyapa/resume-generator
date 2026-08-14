@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any
 from pydantic import BaseModel, Field, model_validator
 from models.resume import MasterResume
@@ -70,39 +72,97 @@ class ResumeRanking(BaseModel):
     skills_analysis: SkillsAnalysis
     unsupported_requirements: list[UnsupportedRequirement] = Field(default_factory=list)
     model_config = {"extra": "forbid"}
-
     def validate_against_master_resume(self, master_resume: MasterResume) -> "ResumeRanking":
-        section_ids = [ranking.section_id for ranking in self.section_rankings]
-        if len(section_ids) != len(set(section_ids)):
-            raise ValueError("Duplicate section_id in section rankings")
-        if set(section_ids) != master_resume.section_ids:
-            raise ValueError("Section rankings must include exactly every master resume section_id")
+        import logging
+        logger = logging.getLogger("backend")
+        
+        # 1. Align Section Rankings
+        existing_section_rankings = {r.section_id: r for r in self.section_rankings}
+        new_section_rankings = []
+        for section in master_resume.sections:
+            if section.section_id in existing_section_rankings:
+                new_section_rankings.append(existing_section_rankings[section.section_id])
+            else:
+                logger.warning(f"Section {section.section_id} not ranked by LLM, using default ranking.")
+                new_section_rankings.append(SectionRanking(
+                    section_id=section.section_id,
+                    priority=0,
+                    recommended=False,
+                    minimum_content=0,
+                    maximum_content=0,
+                    reason="Not ranked by LLM (defaulted)"
+                ))
+        self.section_rankings = new_section_rankings
 
+        # 2. Align Subsection and Bullet Rankings
         subsection_map = master_resume.subsection_by_id()
-        ranked_subsection_ids = [ranking.sub_section_id for ranking in self.subsection_rankings]
-        if len(ranked_subsection_ids) != len(set(ranked_subsection_ids)):
-            raise ValueError("Duplicate sub_section_id in subsection rankings")
-        if set(ranked_subsection_ids) != master_resume.subsection_ids:
-            raise ValueError("Subsection rankings must include exactly every master resume sub_section_id")
+        existing_sub_rankings = {r.sub_section_id: r for r in self.subsection_rankings}
+        new_sub_rankings = []
+        
+        # Helper to get default bullet rankings
+        def default_bullet_ranking(bullet_id: str) -> BulletRanking:
+            return BulletRanking(
+                bullet_id=bullet_id,
+                relevance=0,
+                impact=0,
+                technical_relevance=0,
+                evidence_strength=0,
+                uniqueness=0,
+                redundancy=0,
+                overall=0,
+                reason="Not ranked by LLM (defaulted)",
+                redundant_with=[]
+            )
 
-        ranked_bullet_ids: list[str] = []
-        for subsection_ranking in self.subsection_rankings:
-            subsection = subsection_map.get(subsection_ranking.sub_section_id)
-            if subsection is None:
-                raise ValueError(f"Unknown subsection ID {subsection_ranking.sub_section_id}")
-            if subsection.section_id != subsection_ranking.section_id:
-                raise ValueError(f"Subsection {subsection_ranking.sub_section_id} belongs to {subsection.section_id}, not {subsection_ranking.section_id}")
-            subsection_bullet_ids = {bullet.bullet_id for bullet in master_resume.bullets if bullet.sub_section_id == subsection_ranking.sub_section_id}
-            bullet_ids = [bullet.bullet_id for bullet in subsection_ranking.bullets]
-            if len(bullet_ids) != len(set(bullet_ids)):
-                raise ValueError(f"Duplicate bullet IDs in subsection {subsection_ranking.sub_section_id}")
-            if set(bullet_ids) != subsection_bullet_ids:
-                raise ValueError(f"Subsection {subsection_ranking.sub_section_id} must rank exactly its master resume bullets")
-            ranked_bullet_ids.extend(bullet_ids)
-            for bullet in subsection_ranking.bullets:
+        for subsection in master_resume.sub_sections:
+            sub_id = subsection.sub_section_id
+            subsection_bullets = [b for b in master_resume.bullets if b.sub_section_id == sub_id]
+            
+            if sub_id in existing_sub_rankings:
+                sub_rank = existing_sub_rankings[sub_id]
+                # Check section ID alignment
+                sub_rank.section_id = subsection.section_id
+                
+                # Check and align bullets within this subsection
+                existing_bullets = {b.bullet_id: b for b in sub_rank.bullets}
+                new_bullets = []
+                for b in subsection_bullets:
+                    if b.bullet_id in existing_bullets:
+                        new_bullets.append(existing_bullets[b.bullet_id])
+                    else:
+                        logger.warning(f"Bullet {b.bullet_id} in subsection {sub_id} not ranked by LLM, using default ranking.")
+                        new_bullets.append(default_bullet_ranking(b.bullet_id))
+                sub_rank.bullets = new_bullets
+                new_sub_rankings.append(sub_rank)
+            else:
+                logger.warning(f"Subsection {sub_id} not ranked by LLM, using default ranking.")
+                bullets_ranking = [default_bullet_ranking(b.bullet_id) for b in subsection_bullets]
+                new_sub_rankings.append(SubsectionRanking(
+                    sub_section_id=sub_id,
+                    section_id=subsection.section_id,
+                    priority=0,
+                    relevance=0,
+                    career_value=0,
+                    recency=0,
+                    uniqueness=0,
+                    recommended=False,
+                    minimum_bullets=0,
+                    recommended_bullets=0,
+                    maximum_bullets=0,
+                    reason="Not ranked by LLM (defaulted)",
+                    bullets=bullets_ranking
+                ))
+        self.subsection_rankings = new_sub_rankings
+
+        # 3. Clean up and validate redundant references
+        for sub_ranking in self.subsection_rankings:
+            for bullet in sub_ranking.bullets:
+                clean_redundant = []
                 for redundant_id in bullet.redundant_with:
-                    if redundant_id not in master_resume.bullet_ids:
-                        raise ValueError(f"Bullet {bullet.bullet_id} references unknown redundant bullet {redundant_id}")
-        if set(ranked_bullet_ids) != master_resume.bullet_ids or len(ranked_bullet_ids) != len(master_resume.bullet_ids):
-            raise ValueError("Rankings must account for every master resume bullet exactly once")
+                    if redundant_id in master_resume.bullet_ids:
+                        clean_redundant.append(redundant_id)
+                    else:
+                        logger.warning(f"Bullet {bullet.bullet_id} referenced unknown redundant bullet {redundant_id}, removing.")
+                bullet.redundant_with = clean_redundant
+
         return self

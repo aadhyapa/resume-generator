@@ -7,3 +7,4 @@ google-genai
 uvicorn
 anthropic
 pydantic
+eval_type_backport

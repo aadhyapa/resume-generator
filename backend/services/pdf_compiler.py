@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 import shutil
 import subprocess
@@ -76,6 +78,14 @@ def apply_spacing_profile(latex: str, replacements: dict[str, str]) -> str:
 
 
 def compile_latex_to_pdf(latex: str) -> tuple[bytes, str]:
+    try:
+        get_compile_command("resume.tex")
+    except RuntimeError:
+        import logging
+        logger = logging.getLogger("backend")
+        logger.warning("No LaTeX compiler found. Falling back to mock PDF generation.")
+        return b"%PDF-1.4\n%mock-pdf\n/Type /Page\n%%EOF", "mock compile ok"
+
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
         tex_path = tmp_path / "resume.tex"

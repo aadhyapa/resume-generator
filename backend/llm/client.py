@@ -1,13 +1,18 @@
+from __future__ import annotations
+
 import os
 from dataclasses import dataclass
 from time import perf_counter
 from typing import Protocol
+import logging
 
 import anthropic
 from dotenv import load_dotenv
 from google import genai
 
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -39,23 +44,38 @@ class ProviderLLMClient:
     def _generate_anthropic(self, model: str, prompt: str, temperature: float, max_tokens: int) -> tuple[str, dict | None]:
         if self._anthropic is None:
             self._anthropic = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        response = self._anthropic.messages.create(
-            model=model,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        try:
+            response = self._anthropic.messages.create(
+                model=model,
+                max_tokens=max_tokens,
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except anthropic.BadRequestError as e:
+            logger.error("Anthropic BadRequestError: %s", e)
+            logger.error("Anthropic response body: %s", getattr(e, "response", None))
+            raise
+        except Exception as e:
+            logger.error("Anthropic exception: %s", e)
+            raise
         text = ""
         for block in response.content:
             if getattr(block, "type", None) == "text":
                 text += block.text
             elif hasattr(block, "text") and getattr(block, "type", None) != "thinking":
                 text += block.text
+        
         usage = getattr(response, "usage", None)
         return text.strip(), usage.model_dump() if hasattr(usage, "model_dump") else None
 
     def _generate_gemini(self, model: str, prompt: str, temperature: float) -> tuple[str, dict | None]:
         if self._gemini is None:
             self._gemini = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-        response = self._gemini.models.generate_content(model=model, contents=prompt, config={"temperature": temperature})
+        response = self._gemini.models.generate_content(
+            model=model,
+            contents=prompt,
+            config={
+                "temperature": temperature,
+                "response_mime_type": "application/json",
+            }
+        )
         return (response.text or "").strip(), None

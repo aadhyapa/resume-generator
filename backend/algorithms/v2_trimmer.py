@@ -1,4 +1,5 @@
 import copy
+import logging
 from typing import Any
 
 from models.ranking import ResumeRanking
@@ -6,6 +7,8 @@ from models.resume import MasterResume
 from models.selection import SelectedResumeContent, SelectionRemoval
 from services.pdf_compiler import LatexCompileResult, compile_resume_with_length_check
 from services.resume_repository import selected_content_to_resume
+
+logger = logging.getLogger(__name__)
 
 
 def apply_selected_rewrites(master_resume: MasterResume, selected: SelectedResumeContent, rewrites=None) -> list[dict[str, Any]]:
@@ -53,6 +56,7 @@ def remove_lowest_loss_item(selected: SelectedResumeContent, ranking: ResumeRank
         for bullet_id in subsection.bullet_ids:
             candidates.append((removal_loss(selected, ranking, bullet_id), subsection_id, bullet_id))
     if not candidates:
+        logger.debug("No candidate bullets to remove.")
         return False
     candidates.sort(key=lambda item: (item[0], item[1], item[2]))
     loss, subsection_id, bullet_id = candidates[0]
@@ -65,17 +69,29 @@ def remove_lowest_loss_item(selected: SelectedResumeContent, ranking: ResumeRank
         if section_id in selected.sections and not selected.sections[section_id]:
             del selected.sections[section_id]
     selected.removed_items.append(SelectionRemoval(item_type="bullet", item_id=bullet_id, reason="lowest deterministic page-fit loss", loss=loss))
+    logger.info("Removed bullet %s from subsection %s due to lowest loss (loss: %.4f)", bullet_id, subsection_id, loss)
     return True
 
 
 def trim_to_page_limit(master_resume: MasterResume, selected: SelectedResumeContent, ranking: ResumeRanking, *, max_pages: int = 1, max_trim_iterations: int = 20, compiler=None, page_counter=None) -> tuple[SelectedResumeContent, LatexCompileResult]:
+    logger.info("Starting trim_to_page_limit. max_pages: %d, max_trim_iterations: %d, initial selected bullet count: %d", max_pages, max_trim_iterations, len(selected.selected_bullet_ids()))
+    logger.debug("trim_to_page_limit Input Selected: %s", selected)
+    logger.debug("trim_to_page_limit Input Ranking: %s", ranking)
     current = copy.deepcopy(selected)
     last_result = None
-    for _ in range(max_trim_iterations + 1):
+    for iteration in range(max_trim_iterations + 1):
         resume = render_selected_resume(master_resume, current)
         last_result = compile_resume_with_length_check(resume, max_pages=max_pages, compiler=compiler, page_counter=page_counter)
+        logger.info("Trim iteration %d: Page count: %d, Fits limit: %s", iteration, last_result.page_count, last_result.fits_page_limit)
         if last_result.fits_page_limit:
+            logger.info("Fits page limit. Completing trim_to_page_limit.")
+            logger.debug("trim_to_page_limit Output Selected: %s", current)
             return current, last_result
+        logger.info("Does not fit page limit. Attempting to remove lowest loss item...")
         if not remove_lowest_loss_item(current, ranking):
+            logger.warning("No more items could be removed, but still does not fit page limit.")
+            logger.debug("trim_to_page_limit Output Selected: %s", current)
             return current, last_result
+    logger.warning("Reached max trim iterations limit.")
+    logger.debug("trim_to_page_limit Output Selected: %s", current)
     return current, last_result
