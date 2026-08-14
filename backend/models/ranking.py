@@ -72,10 +72,30 @@ class ResumeRanking(BaseModel):
     skills_analysis: SkillsAnalysis
     unsupported_requirements: list[UnsupportedRequirement] = Field(default_factory=list)
     model_config = {"extra": "forbid"}
+
     def validate_against_master_resume(self, master_resume: MasterResume) -> "ResumeRanking":
         import logging
         logger = logging.getLogger("backend")
-        
+
+        master_section_ids = set(master_resume.section_ids)
+        master_subsection_ids = set(master_resume.subsection_ids)
+        master_bullet_ids = set(master_resume.bullet_ids)
+
+        fabricated_section_ids = sorted({r.section_id for r in self.section_rankings} - master_section_ids)
+        if fabricated_section_ids:
+            raise ValueError(f"Ranking referenced unknown section IDs: {fabricated_section_ids}")
+
+        fabricated_subsection_ids = sorted({r.sub_section_id for r in self.subsection_rankings} - master_subsection_ids)
+        if fabricated_subsection_ids:
+            raise ValueError(f"Ranking referenced unknown subsection IDs: {fabricated_subsection_ids}")
+
+        fabricated_bullet_ids = sorted(
+            {bullet.bullet_id for ranking in self.subsection_rankings for bullet in ranking.bullets}
+            - master_bullet_ids
+        )
+        if fabricated_bullet_ids:
+            raise ValueError(f"Ranking referenced unknown bullet IDs: {fabricated_bullet_ids}")
+
         # 1. Align Section Rankings
         existing_section_rankings = {r.section_id: r for r in self.section_rankings}
         new_section_rankings = []
