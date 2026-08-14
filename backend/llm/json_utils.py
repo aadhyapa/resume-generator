@@ -18,17 +18,26 @@ def strip_json_fences(raw_text: str) -> str:
     return text
 
 
-def _line_excerpt(text: str, line_number: int, *, radius: int = 2) -> str:
+def _truncate_line(line: str, max_line_length: int) -> str:
+    if len(line) <= max_line_length:
+        return line
+    return f"{line[:max_line_length]}..."
+
+
+def _line_excerpt(text: str, line_number: int, *, radius: int = 2, max_line_length: int = 200) -> str:
     lines = text.splitlines() or [""]
     start = max(line_number - radius, 1)
     end = min(line_number + radius, len(lines))
-    return "\n".join(f"{line_no}: {lines[line_no - 1]}" for line_no in range(start, end + 1))
+    return "\n".join(
+        f"{line_no}: {_truncate_line(lines[line_no - 1], max_line_length)}"
+        for line_no in range(start, end + 1)
+    )
 
 
 def parse_json_object(raw_text: str, *, source: str = "LLM response"):
     cleaned = strip_json_fences(raw_text)
     try:
-        return json.loads(cleaned, strict=False)
+        return json.loads(cleaned)
     except JSONDecodeError as exc:
         excerpt = _line_excerpt(cleaned, exc.lineno)
         raise LLMJSONParseError(

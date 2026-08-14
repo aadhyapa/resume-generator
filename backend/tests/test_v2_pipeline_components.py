@@ -225,6 +225,22 @@ class V2ComponentTest(unittest.TestCase):
         self.assertIn('3:     {"bullet_id": "exp1_b1"}', message)
         self.assertIn('4:     {"bullet_id": "exp2_b1"}', message)
 
+
+    def test_v2_json_parse_error_rejects_unescaped_control_characters(self):
+        malformed_response = '{"summary": "first line\nsecond line"}'
+        with self.assertRaises(LLMJSONParseError) as ctx:
+            parse_json_object(malformed_response, source="v2 jd_preprocessor")
+        self.assertIn("Invalid control character", str(ctx.exception))
+
+    def test_v2_json_parse_error_truncates_nearby_lines(self):
+        long_value = "x" * 250
+        malformed_response = f'{{\n  "summary": "{long_value}"\n  "role": "Backend"\n}}'
+        with self.assertRaises(LLMJSONParseError) as ctx:
+            parse_json_object(malformed_response, source="v2 jd_preprocessor")
+        message = str(ctx.exception)
+        self.assertIn("...", message)
+        self.assertNotIn("x" * 225, message)
+
     def test_pipeline_sequence_uses_three_agents_once_before_compression(self):
         master_path = Path(__file__).with_name("tmp_master_resume.json")
         master_path.write_text(json.dumps(sample_master_resume().model_dump(mode="python")), encoding="utf-8")
