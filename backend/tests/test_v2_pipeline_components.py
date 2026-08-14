@@ -226,6 +226,17 @@ class V2ComponentTest(unittest.TestCase):
         self.assertIn('4:     {"bullet_id": "exp2_b1"}', message)
 
 
+    def test_v2_json_parse_can_repair_missing_separator_when_enabled(self):
+        malformed_response = """{
+  "rewritten_bullets": [
+    {"bullet_id": "exp1_b1"}
+    {"bullet_id": "exp2_b1"}
+  ]
+}"""
+        parsed = parse_json_object(malformed_response, source="v2 bullet_rewriter", repair=True)
+        self.assertEqual(parsed["rewritten_bullets"][1]["bullet_id"], "exp2_b1")
+
+
     def test_v2_json_parse_error_rejects_unescaped_control_characters(self):
         malformed_response = '{"summary": "first line\nsecond line"}'
         with self.assertRaises(LLMJSONParseError) as ctx:

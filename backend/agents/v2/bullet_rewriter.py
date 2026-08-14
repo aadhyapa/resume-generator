@@ -33,7 +33,7 @@ def rewrite_selected_bullets(structured_jd: StructuredJobDescription, master_res
     prompt = prompt.replace("<selected_resume>", serialize_selected_content_for_rewriter(master_resume, selected))
     client = llm_client or ProviderLLMClient()
     response = client.generate_json(model=model_name, prompt=prompt, temperature=0.1, max_tokens=5000)
-    result = BulletRewriteResponse.model_validate(parse_json_object(response.text)).validate_against_selection(master_resume, selected_ids)
+    result = BulletRewriteResponse.model_validate(parse_json_object(response.text, source="v2 bullet_rewriter", repair=True)).validate_against_selection(master_resume, selected_ids)
     logger.info("Completed rewrite_selected_bullets. Rewritten bullets count: %d", len(result.rewritten_bullets))
     logger.debug("BulletRewriteResponse Output: %s", result)
     return result
