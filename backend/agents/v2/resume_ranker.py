@@ -20,4 +20,4 @@ def rank_resume_content(structured_jd: StructuredJobDescription, master_resume: 
     prompt = prompt.replace("<master_resume>", serialize_master_resume_for_ranking(master_resume))
     client = llm_client or ProviderLLMClient()
     response = client.generate_json(model=model or settings.resume_ranker_model, prompt=prompt, temperature=0.1, max_tokens=8000)
-    return ResumeRanking.model_validate(parse_json_object(response.text)).validate_against_master_resume(master_resume)
+    return ResumeRanking.model_validate(parse_json_object(response.text, source="v2 resume_ranker")).validate_against_master_resume(master_resume)
