@@ -17,4 +17,4 @@ def preprocess_job_description(raw_job_description: str, llm_client: LLMClient |
     prompt = prompt.replace("<raw_job_description>", raw_job_description)
     client = llm_client or ProviderLLMClient()
     response = client.generate_json(model=model or settings.jd_preprocessor_model, prompt=prompt, temperature=0.1, max_tokens=4000)
-    return StructuredJobDescription.model_validate(parse_json_object(response.text))
+    return StructuredJobDescription.model_validate(parse_json_object(response.text, source="v2 jd_preprocessor"))

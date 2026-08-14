@@ -8,6 +8,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 from algorithms.v2_selector import select_resume_content
 from algorithms.v2_trimmer import remove_lowest_loss_item, trim_to_page_limit
 from llm.client import LLMResponse
+from llm.json_utils import LLMJSONParseError, parse_json_object
 from models.jd import StructuredJobDescription
 from models.ranking import ResumeRanking
 from models.resume import MasterResume
@@ -207,6 +208,22 @@ class V2ComponentTest(unittest.TestCase):
         )
         serialized = serialize_selected_content_for_rewriter(master, selected)
         self.assertLess(serialized.index("[exp1]"), serialized.index("[exp2]"))
+
+
+    def test_v2_json_parse_error_identifies_agent_and_nearby_lines(self):
+        malformed_response = """{
+  "rewritten_bullets": [
+    {"bullet_id": "exp1_b1"}
+    {"bullet_id": "exp2_b1"}
+  ]
+}"""
+        with self.assertRaises(LLMJSONParseError) as ctx:
+            parse_json_object(malformed_response, source="v2 bullet_rewriter")
+        message = str(ctx.exception)
+        self.assertIn("Invalid JSON from v2 bullet_rewriter", message)
+        self.assertIn("line 4", message)
+        self.assertIn('3:     {"bullet_id": "exp1_b1"}', message)
+        self.assertIn('4:     {"bullet_id": "exp2_b1"}', message)
 
     def test_pipeline_sequence_uses_three_agents_once_before_compression(self):
         master_path = Path(__file__).with_name("tmp_master_resume.json")
