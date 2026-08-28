@@ -282,6 +282,59 @@ class V2ComponentTest(unittest.TestCase):
         self.assertEqual(result["page_count"], 1)
         self.assertIn("resume", result)
 
+    def test_call_with_transient_retry_anthropic_success(self):
+        from llm.retry import call_with_transient_retry
+        import anthropic
+        import httpx
+        
+        call_count = 0
+        def attempt():
+            nonlocal call_count
+            call_count += 1
+            if call_count < 2:
+                res = httpx.Response(500, request=httpx.Request("POST", "http://url"))
+                raise anthropic.InternalServerError("Internal Server Error", response=res, body=None)
+            return "success"
+
+        result = call_with_transient_retry(attempt, attempts=3, initial_delay=0.001, backoff_factor=1.0)
+        self.assertEqual(result, "success")
+        self.assertEqual(call_count, 2)
+
+    def test_call_with_transient_retry_gemini_success(self):
+        from llm.retry import call_with_transient_retry
+        from google.genai import errors as genai_errors
+        import httpx
+        
+        call_count = 0
+        def attempt():
+            nonlocal call_count
+            call_count += 1
+            if call_count < 2:
+                res = httpx.Response(500, request=httpx.Request("POST", "http://url"))
+                raise genai_errors.APIError(500, {"error": {"message": "Internal error"}}, response=res)
+            return "gemini_success"
+
+        result = call_with_transient_retry(attempt, attempts=3, initial_delay=0.001, backoff_factor=1.0)
+        self.assertEqual(result, "gemini_success")
+        self.assertEqual(call_count, 2)
+
+    def test_call_with_transient_retry_anthropic_fatal(self):
+        from llm.retry import call_with_transient_retry
+        import anthropic
+        import httpx
+        
+        call_count = 0
+        def attempt():
+            nonlocal call_count
+            call_count += 1
+            res = httpx.Response(400, request=httpx.Request("POST", "http://url"))
+            raise anthropic.BadRequestError("Bad Request", response=res, body=None)
+
+        with self.assertRaises(anthropic.BadRequestError):
+            call_with_transient_retry(attempt, attempts=3, initial_delay=0.001, backoff_factor=1.0)
+        self.assertEqual(call_count, 1)
+
 
 if __name__ == "__main__":
     unittest.main()
+

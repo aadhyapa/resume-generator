@@ -8,6 +8,82 @@ RezMaker: a Chrome extension (`frontend/`) that scrapes a job description off th
 
 `implementation.spec.md` is a large aspirational two-phase (prototype → production) spec; treat it as a roadmap, not a description of current state — most of "Phase 2" (auth, DB, queues, billing) is not implemented. `docs/v2-3-agent-resume-pipeline.md` and `docs/frontend-backend-schema-plan.md` describe the actual current pipeline and response schema and are more reliable.
 
+## File structure
+
+```
+resume-generator/
+├── CLAUDE.md
+├── README.md
+├── implementation.spec.md
+├── docs/
+│   ├── v2-3-agent-resume-pipeline.md       # v2 pipeline design (current, reliable)
+│   ├── v2-3-agent-resume-pipeline-plan.md
+│   └── frontend-backend-schema-plan.md     # resume JSON response contract
+├── backend/                     # FastAPI, cwd for all backend commands
+│   ├── app.py                   # entrypoint, /generate_resume + /render_resume_pdf, branches v1/v2
+│   ├── config.py                # env-driven settings (models, guardrails)
+│   ├── security.py              # X-API-Key auth + rate limiting
+│   ├── conftest.py               # pytest sys.path wiring
+│   ├── agents/                  # v1 pipeline agents + shared v1 test fixtures
+│   │   ├── job_description_chunker.py
+│   │   ├── embedder.py
+│   │   ├── editor.py
+│   │   ├── validator.py
+│   │   ├── formats/             # JSON schemas for structured LLM output
+│   │   ├── prompts/              # prompt text files
+│   │   ├── test_data/            # v1 flat bullet-list fixtures (gitignored)
+│   │   └── v2/                   # v2 pipeline agents
+│   │       ├── jd_preprocessor.py    # JD -> StructuredJobDescription
+│   │       ├── resume_ranker.py      # JD + resume -> ResumeRanking
+│   │       └── bullet_rewriter.py    # rewrites selected bullets
+│   ├── algorithms/
+│   │   ├── matchmaker.py         # v1: cosine similarity scoring
+│   │   ├── selector.py           # v1: greedy bullet selection
+│   │   ├── formatter.py          # shared: assembles final resume dict (both pipelines)
+│   │   ├── v2_selector.py         # v2: marginal-value greedy selection
+│   │   └── v2_trimmer.py          # v2: trims to page limit via real PDF compile
+│   ├── models/                  # Pydantic schemas (jd, ranking, resume, rewriting, selection, trace)
+│   ├── serializers/
+│   │   └── resume_compact.py     # compact resume serialization fed to resume_ranker
+│   ├── services/
+│   │   ├── v2_pipeline.py         # v2 orchestration
+│   │   ├── resume_repository.py   # selected content -> resume dict
+│   │   ├── pdf_compiler.py        # -> latexter
+│   │   └── latexter.py            # LaTeX generation, latexmk/pdflatex + pdfinfo
+│   ├── llm/
+│   │   ├── client.py              # ProviderLLMClient (Claude vs Gemini dispatch)
+│   │   ├── json_utils.py          # best-effort JSON repair for non-Claude models
+│   │   ├── schema_utils.py
+│   │   └── retry.py
+│   ├── scripts/
+│   │   ├── generate_resume_data.py  # builds v1 fixture
+│   │   └── smoke_pipeline.py        # manual e2e smoke test, real LLM providers
+│   ├── tests/
+│   │   ├── test_v2_pipeline_components.py
+│   │   └── test_latexter.py
+│   └── test_data/
+│       └── resume_data_embedded.json  # v2 MasterResume fixture, hand-authored (gitignored)
+└── frontend/                    # WXT + React + TS Chrome extension (MV3), cwd for frontend commands
+    ├── wxt.config.ts
+    ├── entrypoints/
+    │   ├── background.ts         # service worker: fetch to backend, writes generationState
+    │   ├── content.ts            # unused starter-template leftover
+    │   ├── popup/                # main UI: does the scraping + rendering work
+    │   │   ├── App.tsx
+    │   │   ├── Preview.tsx
+    │   │   ├── types.ts           # Resume type mirrors backend's flat section-keyed shape
+    │   │   └── utils/
+    │   │       ├── renderResumeHtml.ts   # client reimpl of algorithms/formatter.py
+    │   │       └── renderResumeLatex.ts  # client reimpl of services/latexter.py
+    │   └── resume-preview/        # popup window for previewing rendered resume
+    ├── lib/
+    │   ├── scraper.tsx            # getJobDescription(), injected into active tab
+    │   └── utils.ts
+    ├── components/
+    └── assets/
+        └── Templates/             # legacy resume HTML/TSX templates
+```
+
 ## Commands
 
 ### Backend (`backend/`, Python, FastAPI)

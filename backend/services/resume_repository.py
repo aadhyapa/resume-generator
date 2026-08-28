@@ -7,7 +7,7 @@ from typing import Any
 
 from models.resume import MasterResume
 
-DEFAULT_RESUME_PATH = Path(__file__).resolve().parents[1] / "test_data" / "resume_data_embedded.json"
+DEFAULT_RESUME_PATH = Path(__file__).resolve().parents[1] / "test_data" / "master_resume.json"
 
 
 def load_master_resume(path: str | Path = DEFAULT_RESUME_PATH) -> MasterResume:

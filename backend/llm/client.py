@@ -10,6 +10,8 @@ import anthropic
 from dotenv import load_dotenv
 from google import genai
 
+from llm.retry import call_with_transient_retry
+
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
 logger = logging.getLogger(__name__)
@@ -62,10 +64,12 @@ class ProviderLLMClient:
 
     def generate_json(self, *, model: str, prompt: str, temperature: float = 0.1, max_tokens: int = DEFAULT_MAX_TOKENS) -> LLMResponse:
         started = perf_counter()
-        if model.startswith("claude"):
-            text, usage = self._generate_anthropic(model, prompt, temperature, max_tokens)
-        else:
-            text, usage = self._generate_gemini(model, prompt, temperature)
+        def _execute():
+            if model.startswith("claude"):
+                return self._generate_anthropic(model, prompt, temperature, max_tokens)
+            else:
+                return self._generate_gemini(model, prompt, temperature)
+        text, usage = call_with_transient_retry(_execute, label=f"generate_json ({model})")
         return LLMResponse(text=text, model=model, latency_ms=int((perf_counter() - started) * 1000), token_usage=usage)
 
     def generate_structured(
@@ -101,8 +105,8 @@ class ProviderLLMClient:
 
         if self._anthropic is None:
             self._anthropic = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        try:
-            response = self._anthropic.messages.create(
+        def _execute():
+            return self._anthropic.messages.create(
                 model=model,
                 max_tokens=max_tokens,
                 tools=[
@@ -116,6 +120,9 @@ class ProviderLLMClient:
                 tool_choice={"type": "tool", "name": tool_name},
                 messages=[{"role": "user", "content": prompt}],
             )
+
+        try:
+            response = call_with_transient_retry(_execute, label=f"generate_structured ({model})")
         except anthropic.BadRequestError as e:
             logger.error("Anthropic BadRequestError (structured): %s", e)
             logger.error("Anthropic response body: %s", getattr(e, "response", None))

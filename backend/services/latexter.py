@@ -352,7 +352,7 @@ def format_unknown_value(value: Any) -> str | None:
         return None
     if isinstance(value, str):
         return value
-    if isinstance(value, bool | int | float):
+    if isinstance(value, (bool, int, float)):
         return str(value)
     if isinstance(value, list):
         return " • ".join(item for item in (format_unknown_value(item) for item in value) if item)
