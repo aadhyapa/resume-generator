@@ -6,5 +6,6 @@ spacy
 google-genai
 uvicorn
 anthropic
+numpy
 pydantic
 eval_type_backport

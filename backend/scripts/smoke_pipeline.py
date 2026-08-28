@@ -3,16 +3,19 @@ import json
 import asyncio
 import sys
 
-# Add backend dir to path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# This script lives in backend/scripts/; add backend/ itself to the path so
+# `app` and the rest of the backend package resolve the same way they do
+# when the server runs.
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(backend_dir)
 
 from app import generate_resume
 
 async def main():
     print("Starting test pipeline execution...")
-    
+
     # Path to the job description file
-    jd_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "agents", "test_data", "simmons_internship.txt")
+    jd_path = os.path.join(backend_dir, "agents", "test_data", "simmons_internship.txt")
     
     if not os.path.exists(jd_path):
         print(f"Error: Job description file not found at {jd_path}")

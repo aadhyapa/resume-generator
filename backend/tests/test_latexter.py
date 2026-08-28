@@ -1,8 +1,4 @@
-import sys
 import unittest
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from services.latexter import escape_latex, render_bullet_text, render_resume_latex
 from services.pdf_compiler import compile_resume_with_length_check

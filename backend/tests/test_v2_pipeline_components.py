@@ -1,9 +1,6 @@
 import json
-import sys
 import unittest
 from pathlib import Path
-
-sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from algorithms.v2_selector import select_resume_content
 from algorithms.v2_trimmer import remove_lowest_loss_item, trim_to_page_limit
