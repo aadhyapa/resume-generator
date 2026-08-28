@@ -1,8 +1,9 @@
 import os
 import json
 import logging
-import anthropic
 from dotenv import load_dotenv
+
+from llm.client import ProviderLLMClient
 
 
 logger = logging.getLogger(__name__)
@@ -13,8 +14,9 @@ backend_dir = os.path.dirname(current_dir)
 dotenv_path = os.path.join(backend_dir, ".env")
 load_dotenv(dotenv_path)
 
-# Initialize Gemini Client
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+# Routed through the shared client so this agent gets the same max_tokens
+# handling as the v2 pipeline instead of calling the SDK directly.
+client = ProviderLLMClient()
 
 def _extract_bullets(resume) -> dict:
     """
@@ -96,31 +98,10 @@ def validate_resume(original_resume, edited_resume, min_chars=50, max_chars=300)
         contents = f"{prompt_text}\n\nInput JSON:\n{json.dumps(comparisons, indent=2)}"
 
         try:
-            logger.info(f"Sending {len(comparisons)} bullet comparisons to Gemini fabrication validator...")
-            # response = client.models.generate_content(
-            #     model="gemini-3.1-flash-lite",
-            #     contents=contents,
-            #     config={"temperature": 0.1}
-            # )
-            response = client.messages.create(
-                model="claude-haiku-4-5",
-                max_tokens=4000,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": contents,
-                    }
-                ], 
-            )
+            logger.info(f"Sending {len(comparisons)} bullet comparisons to fabrication validator...")
+            response = client.generate_json(model="claude-haiku-4-5", prompt=contents, temperature=0.1)
+            raw_response = response.text.strip()
 
-            raw_response = ""
-            for block in response.content:
-                if getattr(block, "type", None) == "text":
-                    raw_response += block.text
-                elif hasattr(block, "text") and not getattr(block, "type", None) == "thinking":
-                    raw_response += block.text
-            raw_response = raw_response.strip()
-            
             # Clean markdown code fences
             if raw_response.startswith("```"):
                 lines = raw_response.splitlines()

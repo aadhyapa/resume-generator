@@ -7,7 +7,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from algorithms.v2_selector import select_resume_content
 from algorithms.v2_trimmer import remove_lowest_loss_item, trim_to_page_limit
-from llm.client import LLMResponse
+from llm.client import LLMResponse, StructuredLLMResponse
 from llm.json_utils import LLMJSONParseError, parse_json_object
 from models.jd import StructuredJobDescription
 from models.ranking import ResumeRanking
@@ -23,9 +23,13 @@ class FakeLLM:
         self.responses = list(responses)
         self.calls = []
 
-    def generate_json(self, *, model, prompt, temperature=0.1, max_tokens=4000):
+    def generate_json(self, *, model, prompt, temperature=0.1, max_tokens=16000):
         self.calls.append({"model": model, "prompt": prompt})
         return LLMResponse(text=json.dumps(self.responses.pop(0)), model=model, latency_ms=1)
+
+    def generate_structured(self, *, model, prompt, tool_name, tool_description, schema, temperature=0.1, max_tokens=16000):
+        self.calls.append({"model": model, "prompt": prompt, "tool_name": tool_name})
+        return StructuredLLMResponse(data=self.responses.pop(0), model=model, latency_ms=1)
 
 
 def sample_master_resume():

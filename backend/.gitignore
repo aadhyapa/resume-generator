@@ -1,7 +1,6 @@
 /venv
 .env
 agents/test_data
-/__pycache__
-/agents/__pycache__
-/algorithms/__pycache__
+__pycache__/
+*.pyc
 backend.log

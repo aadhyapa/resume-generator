@@ -16,10 +16,7 @@ Rules:
 - Recency matters but must not automatically outrank stronger older evidence.
 - Section priorities must depend on the JD; leadership, education, projects, skills, certifications, and experience can each be high or low depending on the JD.
 - Mark unsupported JD requirements instead of filling gaps.
-- Return ONLY valid JSON matching the schema below. No markdown fences.
-
-Schema:
-<schema_json>
+- Report your ranking by calling the submit_resume_ranking tool exactly once with the complete result. Do not describe the ranking in plain text.
 
 Structured JD:
 <structured_jd_json>

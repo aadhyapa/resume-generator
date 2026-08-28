@@ -139,7 +139,7 @@ function App() {
       const latex = renderResumeLatex(resumeData);
       await browser.storage.local.set({ currentResumeLatex: latex });
       const apiBase = import.meta.env.WXT_API_URL ||
-        "https://resume-generator-jtv0.onrender.com/generate_resume";
+        "http://localhost:8000/generate_resume";
       const pdfUrl = apiBase.replace(/\/generate_resume\/?$/, "/render_resume_pdf");
       const headers: Record<string, string> = {
         "Content-Type": "application/json",

@@ -1,8 +1,9 @@
 import os
 import json
 import logging
-import anthropic
 from dotenv import load_dotenv
+
+from llm.client import ProviderLLMClient
 
 logger = logging.getLogger(__name__)
 
@@ -12,8 +13,9 @@ backend_dir = os.path.dirname(current_dir)
 dotenv_path = os.path.join(backend_dir, ".env")
 load_dotenv(dotenv_path)
 
-# Initialize Gemini Client
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+# Routed through the shared client so this agent gets the same max_tokens
+# handling as the v2 pipeline instead of calling the SDK directly.
+client = ProviderLLMClient()
 
 def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
     """
@@ -69,22 +71,9 @@ def editor(resume, job_description_chunks, min_chars=50, max_chars=300):
 
     # 4. Call LLM
     try:
-        response = client.messages.create(
-            model="claude-sonnet-5",
-            max_tokens=4000,
-            messages=[
-                {"role": "user", "content": prompt},
-            ]
-        )
-        
-        raw_response = ""
-        for block in response.content:
-            if getattr(block, "type", None) == "text":
-                raw_response += block.text
-            elif hasattr(block, "text") and not getattr(block, "type", None) == "thinking":
-                raw_response += block.text
-        raw_response = raw_response.strip()
-        
+        response = client.generate_json(model="claude-sonnet-5", prompt=prompt, temperature=0.1)
+        raw_response = response.text.strip()
+
         # Strip markdown fences if present
         if raw_response.startswith("```"):
             lines = raw_response.splitlines()
